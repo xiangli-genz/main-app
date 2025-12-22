@@ -4,6 +4,7 @@ const path = require('path');
 const bookingRoutes = require('./routes/client/booking.route');
 // Mock booking API (for local testing)
 const mockBookingApi = require('./routes/api/bookings.route');
+const moviesApi = require('./routes/api/movies.route');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,9 @@ app.use('/booking', bookingRoutes);
 
 // Mount mock booking API at /api/bookings so controller can call it locally
 app.use('/api/bookings', mockBookingApi);
+
+// Movies API
+app.use('/api/movies', moviesApi);
 
 // Minimal home route to allow navigation
 app.get('/', (req, res) => {

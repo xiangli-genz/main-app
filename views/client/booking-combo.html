@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Combo Xem Phim</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="/services/main-app/public/assets/css/style.css">
+</head>
+<body>
+    <!-- Page 3: Combo Selection -->
+    <div id="page-combo-selection" class="page-content" style="display: none;">
+        <div class="container">
+            <div class="booking-steps">
+                <div class="step completed">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Chọn suất chiếu</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step completed">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Chọn ghế</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step active">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Chọn combo</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Thanh toán</div>
+                </div>
+            </div>
+
+            <div class="seat-container">
+                <h2 style="text-align: center; margin-bottom: 30px; color: var(--color-primary);">
+                    <i class="fa-solid fa-popcorn"></i> Chọn Combo
+                </h2>
+
+                <div class="combo-grid">
+                    <div class="combo-card" data-combo="1" data-price="95000">
+                        <div class="combo-name">Combo 1 - Bắp & Nước</div>
+                        <div class="combo-desc">1 Bắp rang bơ (L) + 2 Nước ngọt (L)</div>
+                        <div class="combo-price">95.000đ</div>
+                        <div class="combo-controls">
+                            <button class="combo-btn" onclick="changeComboQty(1, -1)">-</button>
+                            <span class="combo-quantity" id="combo-qty-1">0</span>
+                            <button class="combo-btn" onclick="changeComboQty(1, 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="2" data-price="45000">
+                        <div class="combo-name">Combo 2 - Bắp Rang</div>
+                        <div class="combo-desc">1 Bắp rang bơ (L)</div>
+                        <div class="combo-price">45.000đ</div>
+                        <div class="combo-controls">
+                            <button class="combo-btn" onclick="changeComboQty(2, -1)">-</button>
+                            <span class="combo-quantity" id="combo-qty-2">0</span>
+                            <button class="combo-btn" onclick="changeComboQty(2, 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="3" data-price="35000">
+                        <div class="combo-name">Combo 3 - Nước Ngọt</div>
+                        <div class="combo-desc">2 Nước ngọt (L)</div>
+                        <div class="combo-price">35.000đ</div>
+                        <div class="combo-controls">
+                            <button class="combo-btn" onclick="changeComboQty(3, -1)">-</button>
+                            <span class="combo-quantity" id="combo-qty-3">0</span>
+                            <button class="combo-btn" onclick="changeComboQty(3, 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="4" data-price="120000">
+                        <div class="combo-name">Combo 4 - Family</div>
+                        <div class="combo-desc">2 Bắp (L) + 4 Nước (L) + 1 Snack</div>
+                        <div class="combo-price">120.000đ</div>
+                        <div class="combo-controls">
+                            <button class="combo-btn" onclick="changeComboQty(4, -1)">-</button>
+                            <span class="combo-quantity" id="combo-qty-4">0</span>
+                            <button class="combo-btn" onclick="changeComboQty(4, 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Tiền vé:</span>
+                        <span id="ticket-price-display">0đ</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Tiền combo:</span>
+                        <span id="combo-price-display">0đ</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 2px solid #ddd;">
+                        <strong style="font-size: 20px;">Tổng cộng:</strong>
+                        <strong style="font-size: 24px; color: var(--color-danger);" id="total-with-combo">0đ</strong>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="showPage('page-seat-selection')">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại
+                    </button>
+                    <button class="btn btn-primary" onclick="showPage('page-checkout')">
+                        Tiếp tục <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/services/main-app/public/assets/js/scripts.js"></script>

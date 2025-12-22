@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Vé Xem Phim</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="/services/main-app/public/assets/css/style.css">
+</head>
+<body>
+    <!-- Page 5: Success -->
+    <div id="page-success" class="page-content" style="display: none;">
+        <div class="container">
+            <div class="success-container">
+                <div class="success-icon">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                
+                <h2 class="success-title">Đặt Vé Thành Công!</h2>
+                
+                <div class="booking-code">
+                    Mã đặt vé: <span id="final-booking-code">BK123456789</span>
+                </div>
+
+                <p style="color: #666; margin-bottom: 30px;">
+                    Cảm ơn bạn đã đặt vé tại rạp của chúng tôi.<br>
+                    Vui lòng đến quầy vé trước giờ chiếu 15 phút để nhận vé.
+                </p>
+
+                <div class="ticket-info">
+                    <h3 style="text-align: center; color: var(--color-primary); margin-bottom: 20px;">
+                        Thông Tin Vé
+                    </h3>
+                    
+                    <div class="info-row">
+                        <span style="color: #666;">Phim:</span>
+                        <strong>Avatar: The Way of Water</strong>
+                    </div>
+                    <div class="info-row">
+                        <span style="color: #666;">Rạp:</span>
+                        <strong id="final-cinema">-</strong>
+                    </div>
+                    <div class="info-row">
+                        <span style="color: #666;">Ngày chiếu:</span>
+                        <strong id="final-date">-</strong>
+                    </div>
+                    <div class="info-row">
+                        <span style="color: #666;">Suất chiếu:</span>
+                        <strong id="final-time">-</strong>
+                    </div>
+                    <div class="info-row">
+                        <span style="color: #666;">Ghế:</span>
+                        <strong id="final-seats">-</strong>
+                    </div>
+                    <div class="info-row">
+                        <span style="color: #666;">Tên khách hàng:</span>
+                        <strong id="final-name">-</strong>
+                    </div>
+                    <div class="info-row">
+                        <span style="color: #666;">Số điện thoại:</span>
+                        <strong id="final-phone">-</strong>
+                    </div>
+                    <div class="info-row" style="font-size: 18px;">
+                        <span>Tổng tiền:</span>
+                        <strong style="color: var(--color-danger);" id="final-total">0đ</strong>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="resetBooking()">
+                        <i class="fa-solid fa-home"></i> Về trang chủ
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> In vé
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/services/main-app/public/assets/js/scripts.js"></script>

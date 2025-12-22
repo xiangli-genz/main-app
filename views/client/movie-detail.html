@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Vé Xem Phim</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="/services/main-app/public/assets/css/style.css">
+</head>
+<body>
+    <!-- Page 1: Movie Detail & Showtime Selection -->
+    <div id="page-movie-detail" class="page-content">
+        <div class="container">
+            <!-- Progress Steps -->
+            <div class="booking-steps">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Chọn suất chiếu</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Chọn ghế</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Chọn combo</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Thanh toán</div>
+                </div>
+            </div>
+
+            <!-- Movie Info -->
+            <div class="movie-detail-container">
+                <div class="movie-info-grid">
+                    <div class="movie-poster">
+                        <img src="https://via.placeholder.com/300x450" alt="Movie Poster">
+                    </div>
+                    <div class="movie-details">
+                        <h1>Avatar: The Way of Water</h1>
+                        <p style="color: #666; margin-bottom: 20px;">P - Phụ đề tiếng Việt</p>
+                        
+                        <div class="movie-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-clock"></i>
+                                <span><strong>Thời lượng:</strong> 192 phút</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-user-tie"></i>
+                                <span><strong>Đạo diễn:</strong> James Cameron</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-users"></i>
+                                <span><strong>Diễn viên:</strong> Sam Worthington, Zoe Saldana</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span><strong>Khởi chiếu:</strong> 16/12/2022</span>
+                            </div>
+                        </div>
+                        
+                        <p style="line-height: 1.6; color: #555;">
+                            Bối cảnh của Avatar: The Way of Water lấy hơn một thập kỷ sau các sự kiện của phần phim đầu tiên, và kể về câu chuyện của gia đình Sully (Jake, Neytiri và các con của họ), rắc rối theo sau họ, những nỗ lực họ phải làm để giữ an toàn cho nhau, trận chiến họ phải chiến đấu để sinh tồn, và những bi kịch họ phải trải qua...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Showtime Selection -->
+                <div class="showtime-section">
+                    <h3><i class="fa-solid fa-film"></i> Chọn Suất Chiếu</h3>
+                    
+                    <div class="cinema-list">
+                        <div class="cinema-item">
+                            <div class="cinema-name"><i class="fa-solid fa-building"></i> CGV Vincom Center</div>
+                            
+                            <div class="date-tabs">
+                                <div class="date-tab active" data-date="2025-01-15">
+                                    <div style="font-weight: 700;">Thứ 4</div>
+                                    <div style="font-size: 12px;">15/01</div>
+                                </div>
+                                <div class="date-tab" data-date="2025-01-16">
+                                    <div style="font-weight: 700;">Thứ 5</div>
+                                    <div style="font-size: 12px;">16/01</div>
+                                </div>
+                                <div class="date-tab" data-date="2025-01-17">
+                                    <div style="font-weight: 700;">Thứ 6</div>
+                                    <div style="font-size: 12px;">17/01</div>
+                                </div>
+                            </div>
+                            
+                            <div class="time-slots">
+                                <div class="time-slot" data-time="10:00" data-format="2D">10:00 - 2D</div>
+                                <div class="time-slot" data-time="13:00" data-format="3D">13:00 - 3D</div>
+                                <div class="time-slot" data-time="16:00" data-format="IMAX">16:00 - IMAX</div>
+                                <div class="time-slot" data-time="19:00" data-format="2D">19:00 - 2D</div>
+                                <div class="time-slot" data-time="22:00" data-format="3D">22:00 - 3D</div>
+                            </div>
+                        </div>
+                        
+                        <div class="cinema-item">
+                            <div class="cinema-name"><i class="fa-solid fa-building"></i> Lotte Cinema Hà Đông</div>
+                            
+                            <div class="date-tabs">
+                                <div class="date-tab active" data-date="2025-01-15">
+                                    <div style="font-weight: 700;">Thứ 4</div>
+                                    <div style="font-size: 12px;">15/01</div>
+                                </div>
+                                <div class="date-tab" data-date="2025-01-16">
+                                    <div style="font-weight: 700;">Thứ 5</div>
+                                    <div style="font-size: 12px;">16/01</div>
+                                </div>
+                            </div>
+                            
+                            <div class="time-slots">
+                                <div class="time-slot" data-time="09:00" data-format="2D">09:00 - 2D</div>
+                                <div class="time-slot" data-time="14:00" data-format="3D">14:00 - 3D</div>
+                                <div class="time-slot" data-time="18:00" data-format="2D">18:00 - 2D</div>
+                                <div class="time-slot" data-time="21:00" data-format="IMAX">21:00 - IMAX</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="btn-to-seat" disabled>
+                        <i class="fa-solid fa-arrow-right"></i> Tiếp tục chọn ghế
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/services/main-app/public/assets/js/scripts.js"></script>

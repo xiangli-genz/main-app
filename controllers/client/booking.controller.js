@@ -2,6 +2,7 @@
 const axios = require('axios');
 
 const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3000';
+const path = require('path');
 
 // Helper function để gọi booking service
 const callBookingService = async (path, method = 'GET', data = null) => {
@@ -70,7 +71,8 @@ module.exports.combo = async (req, res) => {
       ticketPrice: 0
     };
 
-    res.render('client/pages/booking-combo', {
+    // Serve HTML combo page (client will fetch movie via API)
+    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'booking-combo.html'));
       pageTitle: 'Chọn Combo - ' + movieDetail.name,
       movieDetail: {
         id: movieDetail._id,
@@ -123,18 +125,8 @@ module.exports.checkout = async (req, res) => {
       ticketPrice: 0
     };
 
-    res.render('client/pages/booking-checkout', {
-      pageTitle: 'Xác Nhận Đặt Vé - ' + movieDetail.name,
-      movieDetail: {
-        id: movieDetail._id,
-        name: movieDetail.name,
-        avatar: movieDetail.avatar,
-        ageRating: movieDetail.ageRating,
-        language: movieDetail.language
-      },
-      demoBookingData: demoBookingData2,
-      user: req.user || null
-    });
+    // Serve HTML checkout page
+    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'booking-checkout.html'));
     
   } catch (error) {
     console.error('Error in checkout page:', error);
@@ -238,5 +230,25 @@ module.exports.bookedSeats = async (req, res) => {
       code: 'error',
       message: 'Không thể lấy danh sách ghế đã đặt'
     });
+  }
+};
+
+// Serve movie detail HTML (select showtime)
+module.exports.movieDetail = async (req, res) => {
+  try {
+    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'movie-detail.html'));
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
+};
+
+// Serve seat selection HTML
+module.exports.seatPage = async (req, res) => {
+  try {
+    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'booking-seat.html'));
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
   }
 };
