@@ -1,10 +1,11 @@
 // main-app/controllers/client/booking.controller.js
 const axios = require('axios');
+const Movie = require('../../models/movie.model');
 
-const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3000';
-const path = require('path');
+const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3001';
+const SERVICE_TOKEN = process.env.SERVICE_TOKEN || '';
 
-// Helper function để gọi booking service
+// Helper function
 const callBookingService = async (path, method = 'GET', data = null) => {
   try {
     const config = {
@@ -12,7 +13,7 @@ const callBookingService = async (path, method = 'GET', data = null) => {
       url: `${BOOKING_SERVICE_URL}${path}`,
       headers: {
         'Content-Type': 'application/json',
-        'X-Service-Token': process.env.SERVICE_TOKEN
+        'X-Service-Token': SERVICE_TOKEN
       }
     };
     
@@ -28,6 +29,53 @@ const callBookingService = async (path, method = 'GET', data = null) => {
   }
 };
 
+// [GET] /booking/detail/:movieId
+module.exports.detail = async (req, res) => {
+  try {
+    const { movieId } = req.params;
+    
+    const movieDetail = await Movie.findOne({ _id: movieId, deleted: false });
+    
+    if (!movieDetail) {
+      return res.redirect('/');
+    }
+    
+    // Group showtimes
+    const showtimesGrouped = {};
+    (movieDetail.showtimes || []).forEach(st => {
+      if (!showtimesGrouped[st.cinema]) {
+        showtimesGrouped[st.cinema] = {};
+      }
+      
+      const dateKey = st.date;
+      if (!showtimesGrouped[st.cinema][dateKey]) {
+        const dateObj = new Date(st.date);
+        showtimesGrouped[st.cinema][dateKey] = {
+          dateFormat: dateObj.toLocaleDateString('vi-VN'),
+          dayOfWeek: dateObj.toLocaleDateString('vi-VN', { weekday: 'long' }),
+          times: st.times || [],
+          format: st.format
+        };
+      }
+    });
+    
+    // Danh sách rạp
+    const cinemaList = Object.keys(showtimesGrouped).map(name => ({ name }));
+    
+    res.render('client/pages/movie-detail', {
+      pageTitle: movieDetail.name,
+      movieDetail: movieDetail,
+      showtimesGrouped: showtimesGrouped,
+      cinemaList: cinemaList,
+      user: req.user || null
+    });
+    
+  } catch (error) {
+    console.error('Error in detail page:', error);
+    res.redirect('/');
+  }
+};
+
 // [GET] /booking/combo
 module.exports.combo = async (req, res) => {
   try {
@@ -37,18 +85,12 @@ module.exports.combo = async (req, res) => {
       return res.redirect('/');
     }
     
-    // Lấy thông tin phim từ database của main-app
-    const Movie = require('../../models/movie.model');
-    const movieDetail = await Movie.findOne({ 
-      _id: movieId, 
-      deleted: false 
-    });
+    const movieDetail = await Movie.findOne({ _id: movieId, deleted: false });
     
     if (!movieDetail) {
       return res.redirect('/');
     }
     
-    // Danh sách combo
     const combos = [
       { id: 'popcorn', name: 'Bắp Rang Bơ', price: 45000, description: '1 bắp rang bơ (L)' },
       { id: 'coke', name: 'Nước Ngọt', price: 35000, description: '1 ly nước ngọt (L)' },
@@ -57,32 +99,10 @@ module.exports.combo = async (req, res) => {
       { id: 'comboset', name: 'Combo Set', price: 95000, description: '1 bắp (L) + 2 nước ngọt (L)' }
     ];
     
-    // Prepare a demo bookingData for testing (one default seat)
-    const defaultShowtime = (movieDetail.showtimes && movieDetail.showtimes[0]) || { cinema: 'Cinema A', date: new Date().toISOString().split('T')[0], time: '19:00' };
-    const demoBookingData = {
-      movieId: movieDetail._id,
-      movieName: movieDetail.name,
-      movieAvatar: movieDetail.avatar,
-      cinema: defaultShowtime.cinema,
-      showtimeDate: defaultShowtime.date,
-      showtimeTime: defaultShowtime.time,
-      // seats intentionally empty — user must select seats first
-      seats: [],
-      ticketPrice: 0
-    };
-
-    // Serve HTML combo page (client will fetch movie via API)
-    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'booking-combo.html'));
+    res.render('client/pages/booking-combo', {
       pageTitle: 'Chọn Combo - ' + movieDetail.name,
-      movieDetail: {
-        id: movieDetail._id,
-        name: movieDetail.name,
-        avatar: movieDetail.avatar,
-        ageRating: movieDetail.ageRating,
-        language: movieDetail.language
-      },
+      movieDetail: movieDetail,
       combos: combos,
-      demoBookingData: demoBookingData,
       user: req.user || null
     });
     
@@ -101,32 +121,17 @@ module.exports.checkout = async (req, res) => {
       return res.redirect('/');
     }
     
-    // Lấy thông tin phim
-    const Movie = require('../../models/movie.model');
-    const movieDetail = await Movie.findOne({ 
-      _id: movieId, 
-      deleted: false 
-    });
+    const movieDetail = await Movie.findOne({ _id: movieId, deleted: false });
     
     if (!movieDetail) {
       return res.redirect('/');
     }
     
-    const defaultShowtime2 = (movieDetail.showtimes && movieDetail.showtimes[0]) || { cinema: 'Cinema A', date: new Date().toISOString().split('T')[0], time: '19:00' };
-    const demoBookingData2 = {
-      movieId: movieDetail._id,
-      movieName: movieDetail.name,
-      movieAvatar: movieDetail.avatar,
-      cinema: defaultShowtime2.cinema,
-      showtimeDate: defaultShowtime2.date,
-      showtimeTime: defaultShowtime2.time,
-      // seats intentionally empty — user must select seats first
-      seats: [],
-      ticketPrice: 0
-    };
-
-    // Serve HTML checkout page
-    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'booking-checkout.html'));
+    res.render('client/pages/booking-checkout', {
+      pageTitle: 'Xác nhận đặt vé',
+      movieDetail: movieDetail,
+      user: req.user || null
+    });
     
   } catch (error) {
     console.error('Error in checkout page:', error);
@@ -139,7 +144,7 @@ module.exports.create = async (req, res) => {
   try {
     const bookingData = req.body;
     
-    // Gọi booking service để tạo booking
+    // Gọi booking service
     const result = await callBookingService('/api/bookings/create', 'POST', bookingData);
     
     res.json(result);
@@ -162,7 +167,6 @@ module.exports.success = async (req, res) => {
       return res.redirect('/');
     }
     
-    // Lấy thông tin booking từ booking service
     const bookingResult = await callBookingService(`/api/bookings/${bookingId}`);
     
     if (bookingResult.code !== 'success') {
@@ -171,11 +175,11 @@ module.exports.success = async (req, res) => {
     
     const bookingDetail = bookingResult.data.booking;
     
-    // Format dữ liệu
+    // Format dates
     bookingDetail.showtimeDateFormat = new Date(bookingDetail.showtime.date).toLocaleDateString('vi-VN');
     bookingDetail.createdAtFormat = new Date(bookingDetail.createdAt).toLocaleString('vi-VN');
     
-    // Map payment method name
+    // Payment method mapping
     const paymentMethods = {
       'money': 'Tiền mặt',
       'zalopay': 'ZaloPay',
@@ -184,14 +188,14 @@ module.exports.success = async (req, res) => {
     };
     bookingDetail.paymentMethodName = paymentMethods[bookingDetail.paymentMethod] || bookingDetail.paymentMethod;
     
-    // Map payment status name
+    // Payment status mapping
     const paymentStatus = {
       'unpaid': 'Chưa thanh toán',
       'paid': 'Đã thanh toán'
     };
     bookingDetail.paymentStatusName = paymentStatus[bookingDetail.paymentStatus] || bookingDetail.paymentStatus;
     
-    // Map booking status name
+    // Booking status mapping
     const bookingStatus = {
       'pending': 'Đang giữ chỗ',
       'initial': 'Chờ thanh toán',
@@ -214,6 +218,7 @@ module.exports.success = async (req, res) => {
   }
 };
 
+// [GET] /booking/booked-seats (API)
 module.exports.bookedSeats = async (req, res) => {
   try {
     const { movieId, cinema, date, time } = req.query;
@@ -230,25 +235,5 @@ module.exports.bookedSeats = async (req, res) => {
       code: 'error',
       message: 'Không thể lấy danh sách ghế đã đặt'
     });
-  }
-};
-
-// Serve movie detail HTML (select showtime)
-module.exports.movieDetail = async (req, res) => {
-  try {
-    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'movie-detail.html'));
-  } catch (err) {
-    console.error(err);
-    res.redirect('/');
-  }
-};
-
-// Serve seat selection HTML
-module.exports.seatPage = async (req, res) => {
-  try {
-    return res.sendFile(path.join(__dirname, '..', '..', 'views', 'client', 'booking-seat.html'));
-  } catch (err) {
-    console.error(err);
-    res.redirect('/');
   }
 };

@@ -3,20 +3,14 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../../controllers/client/booking.controller');
 
+// Trang chi tiết phim & chọn suất chiếu
+router.get('/detail/:movieId', controller.detail);
+
 // Trang chọn combo
 router.get('/combo', controller.combo);
 
 // Trang checkout
 router.get('/checkout', controller.checkout);
-
-// If user visits /booking or /booking/, show movie detail selector
-router.get('/', controller.movieDetail);
-
-// Movie detail (select showtime)
-router.get('/detail', controller.movieDetail);
-
-// Seat selection
-router.get('/seat', controller.seatPage);
 
 // Trang thành công
 router.get('/success', controller.success);
