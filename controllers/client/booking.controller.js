@@ -1,7 +1,7 @@
 // main-app/controllers/client/booking.controller.js
 const axios = require('axios');
 
-const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3001';
+const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3000';
 
 // Helper function để gọi booking service
 const callBookingService = async (path, method = 'GET', data = null) => {
@@ -56,6 +56,20 @@ module.exports.combo = async (req, res) => {
       { id: 'comboset', name: 'Combo Set', price: 95000, description: '1 bắp (L) + 2 nước ngọt (L)' }
     ];
     
+    // Prepare a demo bookingData for testing (one default seat)
+    const defaultShowtime = (movieDetail.showtimes && movieDetail.showtimes[0]) || { cinema: 'Cinema A', date: new Date().toISOString().split('T')[0], time: '19:00' };
+    const demoBookingData = {
+      movieId: movieDetail._id,
+      movieName: movieDetail.name,
+      movieAvatar: movieDetail.avatar,
+      cinema: defaultShowtime.cinema,
+      showtimeDate: defaultShowtime.date,
+      showtimeTime: defaultShowtime.time,
+      // seats intentionally empty — user must select seats first
+      seats: [],
+      ticketPrice: 0
+    };
+
     res.render('client/pages/booking-combo', {
       pageTitle: 'Chọn Combo - ' + movieDetail.name,
       movieDetail: {
@@ -66,6 +80,7 @@ module.exports.combo = async (req, res) => {
         language: movieDetail.language
       },
       combos: combos,
+      demoBookingData: demoBookingData,
       user: req.user || null
     });
     
@@ -95,6 +110,19 @@ module.exports.checkout = async (req, res) => {
       return res.redirect('/');
     }
     
+    const defaultShowtime2 = (movieDetail.showtimes && movieDetail.showtimes[0]) || { cinema: 'Cinema A', date: new Date().toISOString().split('T')[0], time: '19:00' };
+    const demoBookingData2 = {
+      movieId: movieDetail._id,
+      movieName: movieDetail.name,
+      movieAvatar: movieDetail.avatar,
+      cinema: defaultShowtime2.cinema,
+      showtimeDate: defaultShowtime2.date,
+      showtimeTime: defaultShowtime2.time,
+      // seats intentionally empty — user must select seats first
+      seats: [],
+      ticketPrice: 0
+    };
+
     res.render('client/pages/booking-checkout', {
       pageTitle: 'Xác Nhận Đặt Vé - ' + movieDetail.name,
       movieDetail: {
@@ -104,6 +132,7 @@ module.exports.checkout = async (req, res) => {
         ageRating: movieDetail.ageRating,
         language: movieDetail.language
       },
+      demoBookingData: demoBookingData2,
       user: req.user || null
     });
     
