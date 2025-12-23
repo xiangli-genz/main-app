@@ -7,41 +7,37 @@ const Movie = require('./models/movie.model');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// View engine
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+// ✅ KHÔNG CẦN VIEW ENGINE - DÙNG HTML TĨNH
+// Không cần: app.set('view engine', 'pug');
 
 // Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
+// ✅ STATIC FILES
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
+app.use('/views', express.static(path.join(__dirname, 'views')));
 
-// Routes
-const bookingRoutes = require('./routes/client/booking.route');
-app.use('/booking', bookingRoutes);
+// ✅ ROUTES
+const clientBookingRoutes = require('./routes/client/booking.route');
+const mockBookingApi = require('./routes/api/bookings.route');
+const mockMoviesApi = require('./routes/api/movies.route');
 
-// Home route
-app.get('/', async (req, res) => {
-  try {
-    const movies = await Movie.find({ deleted: false, status: 'active' });
-    
-    res.render('client/pages/home', {
-      pageTitle: 'Trang chủ - Đặt vé xem phim',
-      nowShowingMovies: movies,
-      comingSoonMovies: [],
-      user: null
-    });
-  } catch (error) {
-    console.error('Error in home:', error);
-    res.render('client/pages/home', {
-      pageTitle: 'Trang chủ',
-      nowShowingMovies: [],
-      comingSoonMovies: [],
-      user: null
-    });
-  }
+// ✅ API ROUTES (phải đặt trước client routes)
+app.use('/api/bookings', mockBookingApi);
+app.use('/api/movies', mockMoviesApi);
+
+// ✅ CLIENT ROUTES
+app.use('/booking', clientBookingRoutes);
+
+// ✅ HOME ROUTE - Serve HTML file
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'client', 'pages', 'home.html'));
+});
+
+// ✅ MOVIE DETAIL ROUTE
+app.get('/movie/detail/:movieId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'client', 'pages', 'movie-detail.html'));
 });
 
 // 404 handler
@@ -56,7 +52,10 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✓ Main app listening on http://localhost:${PORT}`);
+  console.log(`✓ Main app running on http://localhost:${PORT}`);
+  console.log(`✓ Movie detail: http://localhost:${PORT}/movie/detail/demo1`);
+  console.log(`✓ Booking combo: http://localhost:${PORT}/booking/combo`);
+  console.log(`✓ Booking checkout: http://localhost:${PORT}/booking/checkout`);
 });
 
 module.exports = app;
