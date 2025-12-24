@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt Vé Xem Phim</title>
+    <title>Đặt Vé Thành Công</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="stylesheet" href="/services/main-app/public/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-    <!-- Page 5: Success -->
-    <div id="page-success" class="page-content" style="display: none;">
-        <div class="container">
-            <div class="success-container">
-                <div class="success-icon">
-                    <i class="fa-solid fa-circle-check"></i>
-                </div>
-                
-                <h2 class="success-title">Đặt Vé Thành Công!</h2>
-                
-                <div class="booking-code">
-                    Mã đặt vé: <span id="final-booking-code">BK123456789</span>
-                </div>
+    <div class="container">
+        <div class="success-container">
+            <div class="success-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            
+            <h2 class="success-title">Đặt Vé Thành Công!</h2>
+            
+            <div class="booking-code">
+                Mã đặt vé: <span id="final-booking-code">Đang tải...</span>
+            </div>
 
-                <p style="color: #666; margin-bottom: 30px;">
-                    Cảm ơn bạn đã đặt vé tại rạp của chúng tôi.<br>
-                    Vui lòng đến quầy vé trước giờ chiếu 15 phút để nhận vé.
-                </p>
+            <p style="color: #666; margin-bottom: 30px;">
+                Cảm ơn bạn đã đặt vé tại rạp của chúng tôi.<br>
+                Vui lòng đến quầy vé trước giờ chiếu 15 phút để nhận vé.
+            </p>
 
+            <div id="loading" style="text-align: center; padding: 40px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; color: var(--color-secondary);"></i>
+                <p style="margin-top: 20px; color: #666;">Đang tải thông tin...</p>
+            </div>
+
+            <div id="booking-details" style="display: none;">
                 <div class="ticket-info">
                     <h3 style="text-align: center; color: var(--color-primary); margin-bottom: 20px;">
                         Thông Tin Vé
@@ -34,7 +38,7 @@
                     
                     <div class="info-row">
                         <span style="color: #666;">Phim:</span>
-                        <strong>Avatar: The Way of Water</strong>
+                        <strong id="final-movie">-</strong>
                     </div>
                     <div class="info-row">
                         <span style="color: #666;">Rạp:</span>
@@ -67,7 +71,7 @@
                 </div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="resetBooking()">
+                    <button class="btn btn-primary" onclick="window.location.href='/'">
                         <i class="fa-solid fa-home"></i> Về trang chủ
                     </button>
                     <button class="btn btn-secondary" onclick="window.print()">
@@ -77,5 +81,63 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Load booking details from API
+        async function loadBookingDetails() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const bookingId = urlParams.get('bookingId');
+                
+                if (!bookingId) {
+                    throw new Error('Không tìm thấy mã booking');
+                }
+                
+                const res = await fetch(`/api/bookings/${bookingId}`);
+                const data = await res.json();
+                
+                if (data.code === 'success' && data.data.booking) {
+                    const booking = data.data.booking;
+                    
+                    // Update UI
+                    document.getElementById('final-booking-code').textContent = booking.bookingCode;
+                    document.getElementById('final-movie').textContent = booking.movieName;
+                    document.getElementById('final-cinema').textContent = booking.cinema;
+                    
+                    const showtimeDate = new Date(booking.showtime.date);
+                    document.getElementById('final-date').textContent = showtimeDate.toLocaleDateString('vi-VN');
+                    document.getElementById('final-time').textContent = `${booking.showtime.time} - ${booking.showtime.format}`;
+                    
+                    const seatNumbers = booking.seats.map(s => s.seatNumber).join(', ');
+                    document.getElementById('final-seats').textContent = seatNumbers;
+                    
+                    document.getElementById('final-name').textContent = booking.fullName;
+                    document.getElementById('final-phone').textContent = booking.phone;
+                    document.getElementById('final-total').textContent = booking.total.toLocaleString('vi-VN') + 'đ';
+                    
+                    // Show details, hide loading
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('booking-details').style.display = 'block';
+                    
+                    // Clear sessionStorage
+                    sessionStorage.removeItem('bookingData');
+                } else {
+                    throw new Error(data.message || 'Không tìm thấy booking');
+                }
+            } catch (err) {
+                console.error('Error loading booking:', err);
+                document.getElementById('loading').innerHTML = `
+                    <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #EF5350;"></i>
+                    <p style="margin-top: 20px; color: #666;">${err.message}</p>
+                    <button onclick="window.location.href='/'" class="btn btn-primary" style="margin-top: 15px;">
+                        <i class="fa-solid fa-home"></i> Về trang chủ
+                    </button>
+                `;
+            }
+        }
+        
+        // Load when page ready
+        loadBookingDetails();
+    </script>
 </body>
-<script src="/services/main-app/public/assets/js/scripts.js"></script>
+</html>
