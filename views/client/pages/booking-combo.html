@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt Combo Xem Phim</title>
+    <title>Chọn Combo - Đặt Vé Xem Phim</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-    <!-- Page 3: Combo Selection -->
-    <div id="page-combo-selection" class="page-content" style="display: none;">
+    <!-- ✅ BỎ style="display: none;" -->
+    <div id="page-combo-selection" class="page-content">
         <div class="container">
             <div class="booking-steps">
                 <div class="step completed">
@@ -100,15 +100,18 @@
                 </div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="showPage('page-seat-selection')">
+                    <button class="btn btn-secondary" onclick="window.history.back()">
                         <i class="fa-solid fa-arrow-left"></i> Quay lại
                     </button>
-                    <button class="btn btn-primary" onclick="showPage('page-checkout')">
+                    <!-- ✅ SỬA ONCLICK -->
+                    <button class="btn btn-primary" onclick="goToCheckout()">
                         Tiếp tục <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="/assets/js/scripts.js"></script>
 </body>
-<script src="/assets/js/scripts.js"></script>
+</html>

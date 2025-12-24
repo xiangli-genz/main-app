@@ -4,6 +4,7 @@ const router = express.Router();
 const controller = require('../../controllers/client/booking.controller');
 
 // ✅ HTML PAGES (Serve static HTML)
+router.get('/seat', controller.seat);        // ← THÊM DÒNG NÀY
 router.get('/combo', controller.combo);
 router.get('/checkout', controller.checkout);
 router.get('/success', controller.success);

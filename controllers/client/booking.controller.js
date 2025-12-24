@@ -29,10 +29,20 @@ const callBookingService = async (path, method = 'GET', data = null) => {
   }
 };
 
+// ✅ THÊM METHOD NÀY
+// [GET] /booking/seat
+module.exports.seat = async (req, res) => {
+  try {
+    res.sendFile(path.join(__dirname, '../../views/client/pages/booking-seat.html'));
+  } catch (error) {
+    console.error('Error in seat page:', error);
+    res.redirect('/');
+  }
+};
+
 // [GET] /booking/combo
 module.exports.combo = async (req, res) => {
   try {
-    // ✅ SERVE HTML FILE
     res.sendFile(path.join(__dirname, '../../views/client/pages/booking-combo.html'));
   } catch (error) {
     console.error('Error in combo page:', error);
@@ -43,7 +53,6 @@ module.exports.combo = async (req, res) => {
 // [GET] /booking/checkout
 module.exports.checkout = async (req, res) => {
   try {
-    // ✅ SERVE HTML FILE
     res.sendFile(path.join(__dirname, '../../views/client/pages/booking-checkout.html'));
   } catch (error) {
     console.error('Error in checkout page:', error);
@@ -60,8 +69,6 @@ module.exports.success = async (req, res) => {
       return res.redirect('/');
     }
     
-    // ✅ Lấy data từ API để JavaScript trong HTML có thể fetch
-    // HTML file sẽ tự fetch data qua /api/bookings/:id
     res.sendFile(path.join(__dirname, '../../views/client/pages/booking-success.html'));
     
   } catch (error) {
@@ -75,7 +82,6 @@ module.exports.create = async (req, res) => {
   try {
     const bookingData = req.body;
     
-    // Gọi booking service hoặc mock API
     const result = await callBookingService('/api/bookings/create', 'POST', bookingData);
     
     res.json(result);
