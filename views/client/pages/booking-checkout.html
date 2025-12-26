@@ -1,3 +1,6 @@
+<!-- ============================================ -->
+<!-- FILE 3: views/client/pages/booking-checkout.html (CẬP NHẬT HOÀN TOÀN) -->
+<!-- ============================================ -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -8,7 +11,6 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-    <!-- ✅ BỎ style="display: none;" -->
     <div id="page-checkout" class="page-content">
         <div class="container">
             <div class="booking-steps">
@@ -72,7 +74,7 @@
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; margin-bottom: 4px;">Tiền mặt</div>
-                                    <div style="font-size: 13px; color: #666;">Thanh toán tại quầy</div>
+                                    <div style="font-size: 13px; color: #666;">Thanh toán tại quầy khi nhận vé</div>
                                 </div>
                             </label>
                         </div>
@@ -85,7 +87,20 @@
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; margin-bottom: 4px;">Ví MoMo</div>
-                                    <div style="font-size: 13px; color: #666;">Thanh toán qua ví điện tử</div>
+                                    <div style="font-size: 13px; color: #666;">Thanh toán qua ví điện tử MoMo</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="payment-option">
+                            <input type="radio" name="payment" id="payment-zalopay" value="zalopay">
+                            <label for="payment-zalopay">
+                                <div class="payment-icon">
+                                    <i class="fa-solid fa-wallet"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; margin-bottom: 4px;">ZaloPay</div>
+                                    <div style="font-size: 13px; color: #666;">Thanh toán qua ví ZaloPay</div>
                                 </div>
                             </label>
                         </div>
@@ -105,6 +120,7 @@
                     </div>
                 </div>
 
+                <!-- ✅ SUMMARY CARD ĐẦY ĐỦ -->
                 <div class="summary-card">
                     <h3 class="summary-title">Thông Tin Đặt Vé</h3>
                     
@@ -114,7 +130,9 @@
 
                     <div style="margin-bottom: 20px;">
                         <h4 id="summary-movie-name" style="color: var(--color-primary); margin-bottom: 10px;">-</h4>
-                        <p id="summary-movie-meta" style="font-size: 13px; color: #666;">-</p>
+                        <p style="font-size: 13px; color: #666; margin: 0;">
+                            <span id="summary-movie-duration">-</span> | <span id="summary-movie-rating">-</span>
+                        </p>
                     </div>
 
                     <div class="summary-item">

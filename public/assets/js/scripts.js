@@ -5,12 +5,19 @@ const bookingState = {
     movieId: null,
     movieName: null,
     movieAvatar: null,
+    movieDuration: null,
+    movieAgeRating: null,
     cinema: '',
     date: '',
     time: '',
     format: '',
     selectedSeats: [],
     ticketPrice: 0,
+    prices: {
+        standard: 50000,
+        vip: 60000,
+        couple: 110000
+    },
     combos: {},
     comboTotal: 0,
     customerInfo: {
@@ -20,31 +27,37 @@ const bookingState = {
         note: ''
     },
     paymentMethod: 'cash',
-    bookingId: null
+    bookingId: null,
+    bookingCode: null
 };
 
 // ===== INITIALIZE =====
 document.addEventListener('DOMContentLoaded', function() {
     const currentPage = window.location.pathname;
     
-    // Load movie detail nếu đang ở trang movie-detail
+    console.log('=== PAGE LOADED ===', currentPage);
+    
+    // Load movie detail
     if (currentPage.includes('/movie/detail/')) {
         const movieId = currentPage.split('/').pop();
         loadMovieDetail(movieId);
     }
     
-    // Initialize seat grid nếu có
+    // Initialize seat grid
     if (document.getElementById('seat-grid')) {
+        console.log('Initializing seat grid...');
         initSeatGrid();
     }
     
-    // Initialize combo page nếu có
+    // Initialize combo page
     if (document.getElementById('page-combo-selection')) {
+        console.log('Initializing combo page...');
         initComboPage();
     }
     
-    // Initialize checkout page nếu có
+    // Initialize checkout page
     if (document.getElementById('page-checkout')) {
+        console.log('Initializing checkout page...');
         initCheckoutPage();
     }
 });
@@ -52,30 +65,53 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===== LOAD MOVIE DETAIL =====
 async function loadMovieDetail(movieId) {
     try {
+        const loadingEl = document.getElementById('loading-state');
+        const contentEl = document.getElementById('movie-detail-content');
+        
         const res = await fetch(`/api/movies/${movieId}`);
         const data = await res.json();
         
         if (data.code === 'success') {
             const movie = data.data.movie;
             
-            // Save to state
+            // ✅ Save FULL movie data to state
             bookingState.movieId = movie._id;
             bookingState.movieName = movie.name;
             bookingState.movieAvatar = movie.avatar;
+            bookingState.movieDuration = movie.duration;
+            bookingState.movieAgeRating = movie.ageRating;
+            bookingState.prices = movie.prices || bookingState.prices;
             
-            // Update UI
-            const posterImg = document.querySelector('.movie-poster img');
-            if (posterImg) posterImg.src = movie.avatar;
+            // ✅ Update ALL movie info in UI
+            document.getElementById('movie-avatar').src = movie.avatar;
+            document.getElementById('movie-name').textContent = movie.name;
+            document.getElementById('movie-age-rating').textContent = movie.ageRating;
+            document.getElementById('movie-language').textContent = movie.language;
+            document.getElementById('movie-duration').textContent = movie.duration;
+            document.getElementById('movie-director').textContent = movie.director;
+            document.getElementById('movie-cast').textContent = movie.cast;
+            document.getElementById('movie-category').textContent = movie.category;
+            document.getElementById('movie-description').textContent = movie.description;
             
-            const title = document.querySelector('.movie-details h1');
-            if (title) title.textContent = movie.name;
+            const releaseDate = new Date(movie.releaseDate);
+            document.getElementById('movie-release-date').textContent = releaseDate.toLocaleDateString('vi-VN');
             
             // Render showtimes
             renderShowtimes(movie.showtimes);
+            
+            // Hide loading, show content
+            loadingEl.style.display = 'none';
+            contentEl.style.display = 'block';
         }
     } catch (err) {
         console.error('Error loading movie:', err);
-        alert('Không thể tải thông tin phim!');
+        document.getElementById('loading-state').innerHTML = `
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #EF5350;"></i>
+            <p style="margin-top: 20px; color: #666;">Không thể tải thông tin phim!</p>
+            <button onclick="window.location.href='/'" class="btn btn-primary" style="margin-top: 15px;">
+                <i class="fa-solid fa-home"></i> Về trang chủ
+            </button>
+        `;
     }
 }
 
@@ -92,8 +128,9 @@ function renderShowtimes(showtimes) {
         if (!grouped[st.cinema]) {
             grouped[st.cinema] = {};
         }
-        if (!grouped[st.cinema][st.date]) {
-            grouped[st.cinema][st.date] = {
+        const dateKey = new Date(st.date).toISOString().split('T')[0];
+        if (!grouped[st.cinema][dateKey]) {
+            grouped[st.cinema][dateKey] = {
                 times: st.times || [],
                 format: st.format
             };
@@ -145,7 +182,6 @@ function renderShowtimes(showtimes) {
         cinemaList.appendChild(cinemaItem);
     });
     
-    // Attach event listeners
     attachShowtimeListeners();
 }
 
@@ -156,8 +192,6 @@ function attachShowtimeListeners() {
             const parent = this.closest('.cinema-item');
             parent.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
-            
-            // TODO: Update time slots based on selected date
             parent.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
             checkShowtimeSelection();
         });
@@ -169,7 +203,7 @@ function attachShowtimeListeners() {
             this.classList.add('selected');
             
             const cinemaItem = this.closest('.cinema-item');
-            const cinemaName = cinemaItem.querySelector('.cinema-name').textContent.replace(/.*\s/, '').trim();
+            const cinemaName = cinemaItem.querySelector('.cinema-name').textContent.trim().split(' ').slice(1).join(' ');
             const activeDate = cinemaItem.querySelector('.date-tab.active');
             const dateValue = activeDate ? activeDate.getAttribute('data-date') : '';
             
@@ -186,7 +220,6 @@ function attachShowtimeListeners() {
     if (btnToSeat) {
         btnToSeat.addEventListener('click', function() {
             if (bookingState.time) {
-                // Save to sessionStorage
                 sessionStorage.setItem('bookingData', JSON.stringify(bookingState));
                 window.location.href = '/booking/seat';
             }
@@ -206,12 +239,36 @@ function initSeatGrid() {
     const seatGrid = document.getElementById('seat-grid');
     if (!seatGrid) return;
     
+    // Load from sessionStorage
+    const savedData = sessionStorage.getItem('bookingData');
+    if (savedData) {
+        Object.assign(bookingState, JSON.parse(savedData));
+    }
+    
+    // ✅ Update seat page info
+    const avatarEl = document.getElementById('seat-movie-avatar');
+    if (avatarEl && bookingState.movieAvatar) {
+        avatarEl.src = bookingState.movieAvatar;
+        avatarEl.style.display = 'block';
+    }
+    
+    document.getElementById('seat-movie-name').textContent = bookingState.movieName || '-';
+    document.getElementById('seat-cinema').textContent = bookingState.cinema || '-';
+    document.getElementById('seat-date').textContent = bookingState.date ? 
+        new Date(bookingState.date).toLocaleDateString('vi-VN') : '-';
+    document.getElementById('seat-time').textContent = bookingState.time ? 
+        `${bookingState.time} - ${bookingState.format}` : '-';
+    
+    // ✅ Update prices from movie data
+    document.getElementById('price-standard').textContent = formatPrice(bookingState.prices.standard);
+    document.getElementById('price-vip').textContent = formatPrice(bookingState.prices.vip);
+    document.getElementById('price-couple').textContent = formatPrice(bookingState.prices.couple);
+    
     const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
     const seatsPerRow = 10;
     const vipRows = ['F', 'G', 'H'];
     const coupleRow = 'J';
     
-    // Load booked seats from API
     loadBookedSeats();
     
     rows.forEach(row => {
@@ -221,18 +278,18 @@ function initSeatGrid() {
         if (row === coupleRow) {
             for (let i = 1; i <= seatsPerRow; i += 2) {
                 const seatNum = `${row}${i}-${row}${i+1}`;
-                const seat = createSeat(seatNum, 'couple', 150000);
+                const seat = createSeat(seatNum, 'couple', bookingState.prices.couple);
                 seatRow.appendChild(seat);
             }
         } else {
             for (let i = 1; i <= seatsPerRow; i++) {
                 const seatNum = `${row}${i}`;
                 let type = 'normal';
-                let price = 50000;
+                let price = bookingState.prices.standard;
                 
                 if (vipRows.includes(row)) {
                     type = 'vip';
-                    price = 70000;
+                    price = bookingState.prices.vip;
                 }
                 
                 const seat = createSeat(seatNum, type, price);
@@ -248,19 +305,13 @@ function initSeatGrid() {
         btnToCombo.addEventListener('click', function() {
             if (bookingState.selectedSeats.length > 0) {
                 sessionStorage.setItem('bookingData', JSON.stringify(bookingState));
-                window.location.href = '/booking/combo?movieId=' + bookingState.movieId;
+                window.location.href = '/booking/combo';
             }
         });
     }
 }
 
 async function loadBookedSeats() {
-    // Load from sessionStorage
-    const savedData = sessionStorage.getItem('bookingData');
-    if (savedData) {
-        Object.assign(bookingState, JSON.parse(savedData));
-    }
-    
     if (!bookingState.movieId || !bookingState.cinema || !bookingState.date || !bookingState.time) {
         return;
     }
@@ -359,6 +410,11 @@ function initComboPage() {
     updateComboTotal();
 }
 
+function goToCheckout() {
+    sessionStorage.setItem('bookingData', JSON.stringify(bookingState));
+    window.location.href = '/booking/checkout';
+}
+
 function changeComboQty(comboId, change) {
     const qtyElement = document.getElementById(`combo-qty-${comboId}`);
     if (!qtyElement) return;
@@ -411,11 +467,17 @@ function initCheckoutPage() {
         Object.assign(bookingState, JSON.parse(savedData));
     }
     
+    console.log('=== CHECKOUT PAGE DATA ===', bookingState);
+    
     updateCheckoutPage();
 }
 
 function updateCheckoutPage() {
     const elements = {
+        movieName: document.getElementById('summary-movie-name'),
+        movieDuration: document.getElementById('summary-movie-duration'),
+        movieRating: document.getElementById('summary-movie-rating'),
+        movieAvatar: document.getElementById('summary-movie-avatar'),
         cinema: document.getElementById('summary-cinema'),
         date: document.getElementById('summary-date'),
         time: document.getElementById('summary-time'),
@@ -426,9 +488,21 @@ function updateCheckoutPage() {
         total: document.getElementById('summary-total')
     };
     
+    // ✅ Movie info
+    if (elements.movieName) elements.movieName.textContent = bookingState.movieName || '-';
+    if (elements.movieDuration) elements.movieDuration.textContent = bookingState.movieDuration || '-';
+    if (elements.movieRating) elements.movieRating.textContent = bookingState.movieAgeRating || '-';
+    if (elements.movieAvatar && bookingState.movieAvatar) {
+        elements.movieAvatar.src = bookingState.movieAvatar;
+        elements.movieAvatar.style.display = 'block';
+    }
+    
+    // Booking details
     if (elements.cinema) elements.cinema.textContent = bookingState.cinema || '--';
-    if (elements.date) elements.date.textContent = bookingState.date ? new Date(bookingState.date).toLocaleDateString('vi-VN') : '--';
-    if (elements.time) elements.time.textContent = bookingState.time ? `${bookingState.time} - ${bookingState.format}` : '--';
+    if (elements.date) elements.date.textContent = bookingState.date ? 
+        new Date(bookingState.date).toLocaleDateString('vi-VN') : '--';
+    if (elements.time) elements.time.textContent = bookingState.time ? 
+        `${bookingState.time} - ${bookingState.format}` : '--';
     
     if (elements.seats && bookingState.selectedSeats.length > 0) {
         elements.seats.textContent = bookingState.selectedSeats.map(s => s.seatNumber).join(', ');
@@ -439,14 +513,17 @@ function updateCheckoutPage() {
         elements.combo.textContent = comboCount > 0 ? `${comboCount} combo` : 'Không';
     }
     
+    // Prices
     if (elements.ticketPrice) elements.ticketPrice.textContent = formatPrice(bookingState.ticketPrice);
     if (elements.comboPrice) elements.comboPrice.textContent = formatPrice(bookingState.comboTotal);
     
     const total = bookingState.ticketPrice + bookingState.comboTotal;
     if (elements.total) elements.total.textContent = formatPrice(total);
+    
+    console.log('✓ Checkout page updated');
 }
 
-// ===== ✅ COMPLETE BOOKING (GỌI API) =====
+// ===== 🔥 COMPLETE BOOKING WITH PAYMENT HANDLING =====
 async function completeBooking() {
     const nameInput = document.getElementById('customer-name');
     const phoneInput = document.getElementById('customer-phone');
@@ -464,6 +541,7 @@ async function completeBooking() {
     const email = emailInput ? emailInput.value.trim() : '';
     const note = noteInput ? noteInput.value.trim() : '';
     
+    // Validation
     if (!name) {
         alert('Vui lòng nhập họ tên!');
         nameInput.focus();
@@ -483,7 +561,9 @@ async function completeBooking() {
         return;
     }
     
-    // ✅ CHUẨN BỊ PAYLOAD
+    const selectedPaymentMethod = paymentMethod ? paymentMethod.value : 'cash';
+    
+    // ✅ Prepare payload
     const payload = {
         movieId: bookingState.movieId,
         movieName: bookingState.movieName,
@@ -498,7 +578,7 @@ async function completeBooking() {
         phone: phone,
         email: email,
         note: note,
-        paymentMethod: paymentMethod ? paymentMethod.value : 'cash'
+        paymentMethod: selectedPaymentMethod
     };
     
     console.log('=== SENDING BOOKING ===', payload);
@@ -515,9 +595,20 @@ async function completeBooking() {
         const data = await res.json();
         
         if (data.code === 'success') {
+            // ✅ Lưu booking info
             bookingState.bookingId = data.data.bookingId;
+            bookingState.bookingCode = data.data.bookingCode;
             sessionStorage.setItem('bookingData', JSON.stringify(bookingState));
-            window.location.href = `/booking/success?bookingId=${data.data.bookingId}`;
+            
+            // ✅ Xử lý theo payment method
+            if (selectedPaymentMethod === 'cash') {
+                // Tiền mặt → Thành công luôn
+                window.location.href = `/booking/success?bookingId=${data.data.bookingId}`;
+            } else {
+                // Online payment → Redirect tới payment gateway (tạm thời skip)
+                alert('Tính năng thanh toán online đang phát triển. Chuyển sang thanh toán tiền mặt.');
+                window.location.href = `/booking/success?bookingId=${data.data.bookingId}`;
+            }
         } else {
             alert(data.message || 'Đặt vé thất bại!');
         }
@@ -530,16 +621,4 @@ async function completeBooking() {
 // ===== UTILITY =====
 function formatPrice(price) {
     return price.toLocaleString('vi-VN') + 'đ';
-}
-
-function showPage(pageId) {
-    document.querySelectorAll('.page-content').forEach(page => {
-        page.style.display = 'none';
-    });
-    
-    const targetPage = document.getElementById(pageId);
-    if (targetPage) {
-        targetPage.style.display = 'block';
-        window.scrollTo(0, 0);
-    }
 }

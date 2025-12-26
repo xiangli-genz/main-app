@@ -1,15 +1,16 @@
-<!-- views/client/pages/booking-seat.html -->
+<!-- ============================================ -->
+<!-- FILE 2: views/client/pages/booking-seat.html (CẬP NHẬT) -->
+<!-- ============================================ -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt Ghế Xem Phim</title>
+    <title>Chọn Ghế - Đặt Vé Xem Phim</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-    <!-- ✅ BỎ style="display: none;" -->
     <div id="page-seat-selection" class="page-content">
         <div class="container">
             <div class="booking-steps">
@@ -35,6 +36,25 @@
             </div>
 
             <div class="seat-container">
+                <!-- ✅ THÊM THÔNG TIN PHIM -->
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <img id="seat-movie-avatar" src="" alt="Movie" style="width: 100px; height: 150px; border-radius: 8px; object-fit: cover; display: none;">
+                        <div>
+                            <h3 id="seat-movie-name" style="color: var(--color-primary); margin-bottom: 8px;">-</h3>
+                            <p style="color: #666; margin-bottom: 5px;">
+                                <i class="fa-solid fa-building"></i> <span id="seat-cinema">-</span>
+                            </p>
+                            <p style="color: #666; margin-bottom: 5px;">
+                                <i class="fa-solid fa-calendar"></i> <span id="seat-date">-</span>
+                            </p>
+                            <p style="color: #666;">
+                                <i class="fa-solid fa-clock"></i> <span id="seat-time">-</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <h2 style="text-align: center; margin-bottom: 30px; color: var(--color-primary);">
                     <i class="fa-solid fa-couch"></i> Chọn Ghế Ngồi
                 </h2>
@@ -42,15 +62,15 @@
                 <div class="seat-legend">
                     <div class="legend-item">
                         <div class="legend-icon seat-normal">A1</div>
-                        <span>Ghế thường (50.000đ)</span>
+                        <span>Ghế thường (<span id="price-standard">50.000đ</span>)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-icon seat-vip">V1</div>
-                        <span>Ghế VIP (70.000đ)</span>
+                        <span>Ghế VIP (<span id="price-vip">70.000đ</span>)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-icon seat-couple">C1-C2</div>
-                        <span>Ghế đôi (150.000đ)</span>
+                        <span>Ghế đôi (<span id="price-couple">150.000đ</span>)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-icon seat-booked">X</div>

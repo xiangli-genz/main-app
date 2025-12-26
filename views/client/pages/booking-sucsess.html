@@ -6,6 +6,38 @@
     <title>Đặt Vé Thành Công</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .qr-code-section {
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .payment-instructions {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .payment-instructions h4 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .payment-instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .payment-instructions li {
+            padding: 8px 0;
+            color: #856404;
+        }
+        .payment-instructions li i {
+            margin-right: 10px;
+            color: #ffc107;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -20,17 +52,31 @@
                 Mã đặt vé: <span id="final-booking-code">Đang tải...</span>
             </div>
 
-            <p style="color: #666; margin-bottom: 30px;">
-                Cảm ơn bạn đã đặt vé tại rạp của chúng tôi.<br>
-                Vui lòng đến quầy vé trước giờ chiếu 15 phút để nhận vé.
-            </p>
-
             <div id="loading" style="text-align: center; padding: 40px;">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; color: var(--color-secondary);"></i>
                 <p style="margin-top: 20px; color: #666;">Đang tải thông tin...</p>
             </div>
 
             <div id="booking-details" style="display: none;">
+                <!-- Payment Instructions -->
+                <div id="payment-instructions" class="payment-instructions" style="display: none;">
+                    <h4><i class="fa-solid fa-info-circle"></i> Hướng Dẫn Thanh Toán</h4>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> Vui lòng đến quầy vé trước giờ chiếu <strong>15 phút</strong></li>
+                        <li><i class="fa-solid fa-check"></i> Xuất trình mã đặt vé hoặc số điện thoại để nhận vé</li>
+                        <li><i class="fa-solid fa-check"></i> Thanh toán bằng tiền mặt tại quầy</li>
+                        <li><i class="fa-solid fa-check"></i> Vé sẽ bị hủy nếu không thanh toán trước giờ chiếu</li>
+                    </ul>
+                </div>
+
+                <!-- QR Code (optional) -->
+                <div class="qr-code-section" id="qr-code-section" style="display: none;">
+                    <h4 style="margin-bottom: 15px;">Mã QR Check-in</h4>
+                    <img id="qr-code-image" src="" alt="QR Code" style="width: 200px; height: 200px;">
+                    <p style="color: #666; margin-top: 10px; font-size: 13px;">Quét mã này tại quầy vé để check-in</p>
+                </div>
+
+                <!-- Ticket Info -->
                 <div class="ticket-info">
                     <h3 style="text-align: center; color: var(--color-primary); margin-bottom: 20px;">
                         Thông Tin Vé
@@ -57,6 +103,10 @@
                         <strong id="final-seats">-</strong>
                     </div>
                     <div class="info-row">
+                        <span style="color: #666;">Combo:</span>
+                        <strong id="final-combos">Không</strong>
+                    </div>
+                    <div class="info-row">
                         <span style="color: #666;">Tên khách hàng:</span>
                         <strong id="final-name">-</strong>
                     </div>
@@ -64,7 +114,11 @@
                         <span style="color: #666;">Số điện thoại:</span>
                         <strong id="final-phone">-</strong>
                     </div>
-                    <div class="info-row" style="font-size: 18px;">
+                    <div class="info-row">
+                        <span style="color: #666;">Phương thức thanh toán:</span>
+                        <strong id="final-payment-method">-</strong>
+                    </div>
+                    <div class="info-row" style="font-size: 18px; border-top: 2px solid #e0e0e0; padding-top: 15px; margin-top: 15px;">
                         <span>Tổng tiền:</span>
                         <strong style="color: var(--color-danger);" id="final-total">0đ</strong>
                     </div>
@@ -83,7 +137,7 @@
     </div>
 
     <script>
-        // Load booking details from API
+        // ✅ Load booking details từ API
         async function loadBookingDetails() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -93,11 +147,16 @@
                     throw new Error('Không tìm thấy mã booking');
                 }
                 
+                console.log('Loading booking:', bookingId);
+                
+                // ✅ GỌI API LẤY BOOKING
                 const res = await fetch(`/api/bookings/${bookingId}`);
                 const data = await res.json();
                 
                 if (data.code === 'success' && data.data.booking) {
                     const booking = data.data.booking;
+                    
+                    console.log('✓ Booking loaded:', booking);
                     
                     // Update UI
                     document.getElementById('final-booking-code').textContent = booking.bookingCode;
@@ -111,11 +170,39 @@
                     const seatNumbers = booking.seats.map(s => s.seatNumber).join(', ');
                     document.getElementById('final-seats').textContent = seatNumbers;
                     
+                    // Combos
+                    if (booking.combos && booking.combos.length > 0) {
+                        const comboText = booking.combos.map(c => `${c.name} x${c.quantity}`).join(', ');
+                        document.getElementById('final-combos').textContent = comboText;
+                    }
+                    
                     document.getElementById('final-name').textContent = booking.fullName;
                     document.getElementById('final-phone').textContent = booking.phone;
+                    
+                    // ✅ Payment method display
+                    const paymentMethods = {
+                        'cash': 'Tiền mặt',
+                        'momo': 'Ví MoMo',
+                        'zalopay': 'ZaloPay',
+                        'bank': 'Chuyển khoản ngân hàng'
+                    };
+                    document.getElementById('final-payment-method').textContent = 
+                        paymentMethods[booking.paymentMethod] || booking.paymentMethod;
+                    
                     document.getElementById('final-total').textContent = booking.total.toLocaleString('vi-VN') + 'đ';
                     
-                    // Show details, hide loading
+                    // ✅ Show payment instructions nếu chưa thanh toán
+                    if (booking.paymentStatus === 'unpaid' && booking.paymentMethod === 'cash') {
+                        document.getElementById('payment-instructions').style.display = 'block';
+                    }
+                    
+                    // ✅ Show QR code nếu có
+                    if (booking.qrCode) {
+                        document.getElementById('qr-code-image').src = booking.qrCode;
+                        document.getElementById('qr-code-section').style.display = 'block';
+                    }
+                    
+                    // Hide loading, show details
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('booking-details').style.display = 'block';
                     
