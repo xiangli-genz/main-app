@@ -149,8 +149,8 @@
                 
                 console.log('Loading booking:', bookingId);
                 
-                // ✅ GỌI API LẤY BOOKING
-                const res = await fetch(`/api/bookings/${bookingId}`);
+                // ✅ GỌI ĐÚNG ROUTE - QUA MAIN-APP, KHÔNG TRỰC TIẾP
+                const res = await fetch(`/booking/${bookingId}`);
                 const data = await res.json();
                 
                 if (data.code === 'success' && data.data.booking) {
@@ -179,7 +179,7 @@
                     document.getElementById('final-name').textContent = booking.fullName;
                     document.getElementById('final-phone').textContent = booking.phone;
                     
-                    // ✅ Payment method display
+                    // Payment method display
                     const paymentMethods = {
                         'cash': 'Tiền mặt',
                         'momo': 'Ví MoMo',
@@ -191,12 +191,12 @@
                     
                     document.getElementById('final-total').textContent = booking.total.toLocaleString('vi-VN') + 'đ';
                     
-                    // ✅ Show payment instructions nếu chưa thanh toán
+                    // Show payment instructions nếu chưa thanh toán
                     if (booking.paymentStatus === 'unpaid' && booking.paymentMethod === 'cash') {
                         document.getElementById('payment-instructions').style.display = 'block';
                     }
                     
-                    // ✅ Show QR code nếu có
+                    // Show QR code nếu có
                     if (booking.qrCode) {
                         document.getElementById('qr-code-image').src = booking.qrCode;
                         document.getElementById('qr-code-section').style.display = 'block';
@@ -222,7 +222,7 @@
                 `;
             }
         }
-        
+
         // Load when page ready
         loadBookingDetails();
     </script>
