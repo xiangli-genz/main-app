@@ -4,7 +4,7 @@ const router = express.Router();
 const axios = require('axios');
 
 // URL của booking service
-const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3001';
+const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3002';
 
 // Middleware để forward request tới booking service
 const forwardToBookingService = async (req, res) => {

@@ -1,8 +1,6 @@
 // main-app/routes/api/movies.route.js
 const express = require('express');
 const router = express.Router();
-
-// ✅ FIX PATH - Từ ../../../ → ../../
 const Movie = require('../../models/movie.model');
 
 // GET /api/movies/:id
