@@ -7,7 +7,6 @@ const controller = require('../../controllers/client/booking.controller');
 router.get('/seat', controller.seat);        // ← THÊM DÒNG NÀY
 router.get('/combo', controller.combo);
 router.get('/checkout', controller.checkout);
-router.get('/success', controller.success);
 
 // ✅ API ENDPOINTS (Return JSON)
 router.post('/create', controller.create);

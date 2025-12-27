@@ -1,8 +1,6 @@
-// main-app/index.js
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-// ❌ XÓA: const Movie = require('./models/movie.model');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,26 +13,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
 app.use('/views', express.static(path.join(__dirname, 'views')));
 
-// ✅ CLIENT ROUTES (giữ nguyên)
+// ✅ CLIENT ROUTES
 const clientBookingRoutes = require('./routes/client/booking.route');
+const clientPaymentRoutes = require('./routes/client/payment.route');  // ← THÊM
 
-// ❌ XÓA: const mockBookingApi = require('./routes/api/bookings.route');
-// ❌ XÓA: const mockMoviesApi = require('./routes/api/movies.route');
-
-// ✅ API ROUTES - Forward sang các services
-const bookingApiProxy = require('./routes/booking.route'); // ← GIỮ LẠI (proxy)
+// ✅ API ROUTES - Proxies
+const bookingApiProxy = require('./routes/booking.route');
+const movieApiProxy = require('./routes/movie.route');
+const paymentApiProxy = require('./routes/payment.route');  // ← THÊM
 
 // ✅ Forward API requests
 app.use('/api/bookings', bookingApiProxy);
-
-// ✅ GỌI MOVIE SERVICE (thêm mới)
-const movieApiProxy = require('./routes/movie.route'); // ← TẠO MỚI
 app.use('/api/movies', movieApiProxy);
+app.use('/api/payments', paymentApiProxy);  // ← THÊM
 
 // ✅ CLIENT ROUTES
 app.use('/booking', clientBookingRoutes);
+app.use('/payment', clientPaymentRoutes);  // ← THÊM
 
-// ✅ HOME & MOVIE DETAIL ROUTES (giữ nguyên)
+// ✅ HOME & MOVIE DETAIL ROUTES
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'client', 'pages', 'home.html'));
 });

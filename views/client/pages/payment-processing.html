@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đang xử lý thanh toán...</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/payment.css">
+</head>
+<body>
+    <div class="container">
+        <div class="payment-container processing-container">
+            <div class="payment-icon processing-icon">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+            </div>
+            
+            <h2 class="payment-title">Đang xử lý thanh toán</h2>
+            
+            <p class="payment-description">
+                Vui lòng không tắt trình duyệt hoặc nhấn nút Back.<br>
+                Chúng tôi đang xử lý giao dịch của bạn...
+            </p>
+            
+            <div id="payment-info" class="payment-info-box" style="display: none;">
+                <div class="info-item">
+                    <span class="info-label">Mã thanh toán:</span>
+                    <strong class="info-value" id="payment-code">-</strong>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Số tiền:</span>
+                    <strong class="info-value amount" id="payment-amount">-</strong>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Phương thức:</span>
+                    <strong class="info-value" id="payment-method">-</strong>
+                </div>
+            </div>
+            
+            <div class="payment-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <p class="progress-text" id="progress-text">Đang kiểm tra trạng thái...</p>
+            </div>
+            
+            <p class="payment-security">
+                <i class="fa-solid fa-shield-halved"></i> 
+                Giao dịch được bảo mật bởi SSL 256-bit
+            </p>
+        </div>
+    </div>
+    <script src="/assets/js/scripts.js"></script>

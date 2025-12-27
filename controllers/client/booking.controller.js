@@ -60,23 +60,6 @@ module.exports.checkout = async (req, res) => {
   }
 };
 
-// [GET] /booking/success
-module.exports.success = async (req, res) => {
-  try {
-    const { bookingId } = req.query;
-    
-    if (!bookingId) {
-      return res.redirect('/');
-    }
-    
-    res.sendFile(path.join(__dirname, '../../views/client/pages/booking-success.html'));
-    
-  } catch (error) {
-    console.error('Error in success page:', error);
-    res.redirect('/');
-  }
-};
-
 // [POST] /booking/create - API ENDPOINT
 module.exports.create = async (req, res) => {
   try {

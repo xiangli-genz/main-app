@@ -1,0 +1,112 @@
+<!-- ============================================ -->
+<!-- FILE 2: views/client/pages/booking-seat.html (CẬP NHẬT) -->
+<!-- ============================================ -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chọn Ghế - Đặt Vé Xem Phim</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+    <div id="page-seat-selection" class="page-content">
+        <div class="container">
+            <div class="booking-steps">
+                <div class="step completed">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Chọn suất chiếu</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step active">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Chọn ghế</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Chọn combo</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Thanh toán</div>
+                </div>
+            </div>
+
+            <div class="seat-container">
+                <!-- ✅ THÊM THÔNG TIN PHIM -->
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <img id="seat-movie-avatar" src="" alt="Movie" style="width: 100px; height: 150px; border-radius: 8px; object-fit: cover; display: none;">
+                        <div>
+                            <h3 id="seat-movie-name" style="color: var(--color-primary); margin-bottom: 8px;">-</h3>
+                            <p style="color: #666; margin-bottom: 5px;">
+                                <i class="fa-solid fa-building"></i> <span id="seat-cinema">-</span>
+                            </p>
+                            <p style="color: #666; margin-bottom: 5px;">
+                                <i class="fa-solid fa-calendar"></i> <span id="seat-date">-</span>
+                            </p>
+                            <p style="color: #666;">
+                                <i class="fa-solid fa-clock"></i> <span id="seat-time">-</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 style="text-align: center; margin-bottom: 30px; color: var(--color-primary);">
+                    <i class="fa-solid fa-couch"></i> Chọn Ghế Ngồi
+                </h2>
+
+                <div class="seat-legend">
+                    <div class="legend-item">
+                        <div class="legend-icon seat-normal">A1</div>
+                        <span>Ghế thường (<span id="price-standard">50.000đ</span>)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-icon seat-vip">V1</div>
+                        <span>Ghế VIP (<span id="price-vip">70.000đ</span>)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-icon seat-couple">C1-C2</div>
+                        <span>Ghế đôi (<span id="price-couple">150.000đ</span>)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-icon seat-booked">X</div>
+                        <span>Đã đặt</span>
+                    </div>
+                </div>
+
+                <div class="screen-label">MÀN HÌNH</div>
+                <div class="screen"></div>
+
+                <div class="seat-grid" id="seat-grid"></div>
+
+                <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Ghế đã chọn:</strong> 
+                            <span id="selected-seats-display">Chưa chọn ghế</span>
+                        </div>
+                        <div style="font-size: 24px; font-weight: 700; color: var(--color-danger);">
+                            Tổng: <span id="total-price">0đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="window.history.back()">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại
+                    </button>
+                    <button class="btn btn-primary" id="btn-to-combo" disabled>
+                        Tiếp tục <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/assets/js/scripts.js"></script>
+</body>
+</html>

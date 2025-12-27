@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Vé Xem Phim</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+    <div id="page-movie-detail" class="page-content">
+        <div class="container">
+            <!-- Progress Steps -->
+            <div class="booking-steps">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Chọn suất chiếu</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Chọn ghế</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Chọn combo</div>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step pending">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Thanh toán</div>
+                </div>
+            </div>
+
+            <!-- ✅ LOADING STATE -->
+            <div id="loading-state" style="text-align: center; padding: 60px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; color: var(--color-secondary);"></i>
+                <p style="margin-top: 20px; color: #666;">Đang tải thông tin phim...</p>
+            </div>
+
+            <!-- Movie Info -->
+            <div class="movie-detail-container" id="movie-detail-content" style="display: none;">
+                <div class="movie-info-grid">
+                    <div class="movie-poster">
+                        <img id="movie-avatar" src="" alt="Movie Poster">
+                    </div>
+                    <div class="movie-details">
+                        <h1 id="movie-name">-</h1>
+                        <p style="color: #666; margin-bottom: 20px;">
+                            <span id="movie-age-rating">-</span> - <span id="movie-language">-</span>
+                        </p>
+                        
+                        <div class="movie-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-clock"></i>
+                                <span><strong>Thời lượng:</strong> <span id="movie-duration">-</span></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-user-tie"></i>
+                                <span><strong>Đạo diễn:</strong> <span id="movie-director">-</span></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-users"></i>
+                                <span><strong>Diễn viên:</strong> <span id="movie-cast">-</span></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span><strong>Khởi chiếu:</strong> <span id="movie-release-date">-</span></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-tags"></i>
+                                <span><strong>Thể loại:</strong> <span id="movie-category">-</span></span>
+                            </div>
+                        </div>
+                        
+                        <p id="movie-description" style="line-height: 1.6; color: #555; margin-top: 20px;">
+                            -
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Showtime Selection -->
+                <div class="showtime-section">
+                    <h3><i class="fa-solid fa-film"></i> Chọn Suất Chiếu</h3>
+                    
+                    <div class="cinema-list" id="cinema-list">
+                        <!-- Dynamically rendered -->
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="btn-to-seat" disabled>
+                        <i class="fa-solid fa-arrow-right"></i> Tiếp tục chọn ghế
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/assets/js/scripts.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!-- ============================================ -->
+<!-- FILE 2: main-app/views/client/pages/payment-failed.html -->
+<!-- ============================================ -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán thất bại</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/payment.css">
+</head>
+<body>
+    <div class="container">
+        <div class="payment-container failed-container">
+            <div class="payment-icon failed-icon">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+            
+            <h2 class="payment-title">Thanh Toán Thất Bại!</h2>
+            
+            <p class="payment-description">
+                Rất tiếc, giao dịch của bạn không thể hoàn tất.<br>
+                Vui lòng thử lại hoặc chọn phương thức thanh toán khác.
+            </p>
+            
+            <div class="error-reasons-box">
+                <h4><i class="fa-solid fa-info-circle"></i> Nguyên nhân có thể do:</h4>
+                <ul class="reasons-list">
+                    <li><i class="fa-solid fa-check"></i> Số dư tài khoản không đủ</li>
+                    <li><i class="fa-solid fa-check"></i> Thông tin thanh toán không chính xác</li>
+                    <li><i class="fa-solid fa-check"></i> Giao dịch bị hủy hoặc hết thời gian</li>
+                    <li><i class="fa-solid fa-check"></i> Lỗi kết nối với cổng thanh toán</li>
+                </ul>
+            </div>
+            
+            <div id="booking-info" class="payment-info-box" style="display: none;">
+                <h4 class="info-title">Thông tin đặt vé:</h4>
+                <div class="info-item">
+                    <span class="info-label">Mã booking:</span>
+                    <strong class="info-value" id="booking-code">-</strong>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Số tiền:</span>
+                    <strong class="info-value amount" id="booking-amount">-</strong>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="retryPayment()">
+                    <i class="fa-solid fa-redo"></i> Thử lại
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/'">
+                    <i class="fa-solid fa-home"></i> Về trang chủ
+                </button>
+            </div>
+            
+            <p class="payment-support">
+                Nếu bạn đã bị trừ tiền nhưng giao dịch thất bại,<br>
+                vui lòng liên hệ hotline: <strong>1900 xxxx</strong>
+            </p>
+        </div>
+    </div>
+    <script src="/assets/js/scripts.js"></script>
