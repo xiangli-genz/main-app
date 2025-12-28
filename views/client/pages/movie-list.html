@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh sách phim</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <!-- Breadcrumb -->
+  <div class="box-breadcrumb">
+    <div class="inner-image">
+      <img src="https://via.placeholder.com/1200x300" alt="Breadcrumb">
+    </div>
+    <div class="inner-content">
+      <div class="container">
+        <h1 class="inner-title">Danh sách phim</h1>
+        <div class="inner-list">
+          <a href="/">Trang chủ</a> > <span>Phim</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-9">
+    <div class="container">
+      <div class="inner-wrap">
+        <!-- Filter -->
+        <div class="inner-left">
+          <div class="box-filter">
+            <div class="inner-head">
+              <div class="inner-title">Bộ Lọc</div>
+              <i class="fa-solid fa-filter"></i>
+            </div>
+            <div class="inner-body">
+              <div class="inner-group">
+                <div class="inner-label">Rạp Chiếu</div>
+                <select name="cinema">
+                  <option value="">-- Chọn rạp --</option>
+                </select>
+              </div>
+              <div class="inner-group">
+                <div class="inner-label">Thể loại</div>
+                <select name="categoryFilter">
+                  <option value="">-- Chọn thể loại --</option>
+                </select>
+              </div>
+              <div class="inner-group">
+                <button class="inner-button">Áp Dụng</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- List phim -->
+        <div class="inner-right">
+          <div class="inner-info-2">
+            <div class="inner-sort">
+              <div class="inner-label">Sắp xếp:</div>
+              <div class="inner-list">
+                <button data-sort="latest">Mới nhất</button>
+                <button data-sort="price-asc">Giá tăng dần</button>
+                <button data-sort="price-desc">Giá giảm dần</button>
+                <button data-sort="name">Tên A-Z</button>
+              </div>
+            </div>
+            <div class="inner-count-record">Tất cả: <b id="total-movie">0</b> phim</div>
+          </div>
+
+          <div class="inner-list-tour" id="movie-list">
+            <!-- Phim sẽ render bằng JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+  <div id="book-contact-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    fetch('partials/header.html').then(r => r.text()).then(html => document.getElementById('header-placeholder').innerHTML = html);
+    fetch('partials/footer.html').then(r => r.text()).then(html => document.getElementById('footer-placeholder').innerHTML = html);
+    fetch('partials/book-contact.html').then(r => r.text()).then(html => document.getElementById('book-contact-placeholder').innerHTML = html);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      axios.get('http://localhost:3002/api/catalog/client/movies')
+        .then(res => {
+          const movies = res.data.data;
+          document.getElementById('total-movie').textContent = movies.length;
+          const list = document.getElementById('movie-list');
+          movies.forEach(movie => {
+            const item = document.createElement('div');
+            item.className = 'product-item';
+            item.innerHTML = `
+              <div class="inner-image">
+                <a href="movie-detail.html?id=${movie._id}">
+                  <img src="${movie.avatar}" alt="${movie.name}">
+                </a>
+              </div>
+              <div class="inner-content">
+                <h3 class="inner-title">
+                  <a href="movie-detail.html?id=${movie._id}">${movie.name}</a>
+                </h3>
+                <div class="inner-desc">
+                  <div class="inner-desc-item">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Ngày chiếu: <b>${movie.releaseDateFormat || '--'}</b>
+                  </div>
+                  <div class="inner-desc-item">
+                    <i class="fa-solid fa-clock"></i>
+                    Thời lượng: <b>${movie.duration || '--'}</b>
+                  </div>
+                </div>
+                <div class="inner-meta">
+                  <div class="inner-rating">
+                    <div class="inner-stars">
+                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                    </div>
+                    <div class="inner-number">(4.5/5)</div>
+                  </div>
+                  <a class="btn-book" href="movie-detail.html?id=${movie._id}">Đặt vé</a>
+                </div>
+              </div>
+            `;
+            list.appendChild(item);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching movies:', error);
+          document.getElementById('movie-list').innerHTML = '<p>Không thể tải dữ liệu phim. Vui lòng thử lại sau.</p>';
+        });
+    });
+  </script>
+</body>
+</html>

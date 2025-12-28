@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Admin - Create/Edit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            margin-bottom: 30px; 
+            color: #1f2e38;
+            border-bottom: 3px solid #2196F3;
+            padding-bottom: 15px;
+        }
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #333;
+        }
+        input, textarea, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        .row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .showtime-group {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+            margin-left: 10px;
+        }
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+            margin-top: 10px;
+        }
+        .btn-danger {
+            background: #EF5350;
+            color: white;
+            margin-top: 10px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .time-input {
+            display: inline-block;
+            width: auto;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Quản lý phim - Tạo/Sửa</h1>
+        
+        <div id="alert-container"></div>
+
+        <form id="movie-form" enctype="multipart/form-data">
+            <input type="hidden" id="movie-id" name="movieId">
+
+            <!-- Basic Info -->
+            <div class="form-group">
+                <label>Tên phim *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>Danh mục</label>
+                    <input type="text" id="category" name="category" placeholder="Hành động, Kinh dị...">
+                </div>
+                <div class="form-group">
+                    <label>Trạng thái</label>
+                    <select id="status" name="status">
+                        <option value="active">Hoạt động</option>
+                        <option value="inactive">Ẩn</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>Thời lượng</label>
+                    <input type="text" id="duration" name="duration" placeholder="120 phút">
+                </div>
+                <div class="form-group">
+                    <label>Phân loại tuổi</label>
+                    <select id="ageRating" name="ageRating">
+                        <option value="P">P - Mọi lứa tuổi</option>
+                        <option value="T13">T13 - Trên 13 tuổi</option>
+                        <option value="T16">T16 - Trên 16 tuổi</option>
+                        <option value="T18">T18 - Trên 18 tuổi</option>
+                        <option value="C">C - Cấm dưới 18</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>Đạo diễn</label>
+                    <input type="text" id="director" name="director">
+                </div>
+                <div class="form-group">
+                    <label>Ngày khởi chiếu</label>
+                    <input type="date" id="releaseDate" name="releaseDate">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Diễn viên</label>
+                <input type="text" id="cast" name="cast" placeholder="Actor 1, Actor 2...">
+            </div>
+
+            <div class="form-group">
+                <label>Ngôn ngữ</label>
+                <input type="text" id="language" name="language" placeholder="Tiếng Anh - Phụ đề Việt">
+            </div>
+
+            <div class="form-group">
+                <label>Mô tả</label>
+                <textarea id="description" name="description" rows="4"></textarea>
+            </div>
+
+            <!-- Prices -->
+            <h3 style="margin: 30px 0 20px; color: #2196F3;">💰 Giá vé</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label>Ghế thường (Standard)</label>
+                    <input type="number" id="priceStandard" name="priceStandard" value="50000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Ghế VIP</label>
+                    <input type="number" id="priceVip" name="priceVip" value="70000" min="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Ghế đôi (Couple)</label>
+                <input type="number" id="priceCouple" name="priceCouple" value="130000" min="0">
+            </div>
+
+            <!-- Showtimes -->
+            <h3 style="margin: 30px 0 20px; color: #2196F3;">🎦 Lịch chiếu</h3>
+            <div id="showtimes-container"></div>
+            <button type="button" class="btn btn-success" onclick="addShowtime()">
+                + Thêm lịch chiếu
+            </button>
+
+            <!-- Submit -->
+            <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+                <button type="submit" class="btn btn-primary">
+                    💾 Lưu phim
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                    🔄 Làm mới
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3002/api/catalog/admin/movies';
+        let showtimeCount = 0;
+
+        // Add showtime
+        function addShowtime() {
+            showtimeCount++;
+            const container = document.getElementById('showtimes-container');
+            const div = document.createElement('div');
+            div.className = 'showtime-group';
+            div.id = `showtime-${showtimeCount}`;
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <strong>Suất chiếu #${showtimeCount}</strong>
+                    <button type="button" class="btn btn-danger" style="padding: 6px 12px;" onclick="removeShowtime(${showtimeCount})">
+                        🗑️ Xóa
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label>Rạp</label>
+                    <input type="text" name="cinema-${showtimeCount}" placeholder="CGV Vincom Hà Nội" required>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Ngày chiếu</label>
+                        <input type="date" name="date-${showtimeCount}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Định dạng</label>
+                        <select name="format-${showtimeCount}">
+                            <option value="2D">2D</option>
+                            <option value="3D">3D</option>
+                            <option value="IMAX">IMAX</option>
+                            <option value="4DX">4DX</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Giờ chiếu (cách nhau bởi dấu phẩy)</label>
+                    <input type="text" name="times-${showtimeCount}" placeholder="10:00, 14:00, 18:00, 21:00" required>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        // Remove showtime
+        function removeShowtime(id) {
+            const el = document.getElementById(`showtime-${id}`);
+            if (el) el.remove();
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('movie-form').reset();
+            document.getElementById('movie-id').value = '';
+            document.getElementById('showtimes-container').innerHTML = '';
+            showtimeCount = 0;
+            showAlert('Form đã được làm mới', 'success');
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Submit form
+        document.getElementById('movie-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+
+            // Basic fields
+            formData.append('name', document.getElementById('name').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('status', document.getElementById('status').value);
+            formData.append('duration', document.getElementById('duration').value);
+            formData.append('ageRating', document.getElementById('ageRating').value);
+            formData.append('director', document.getElementById('director').value);
+            formData.append('releaseDate', document.getElementById('releaseDate').value);
+            formData.append('cast', document.getElementById('cast').value);
+            formData.append('language', document.getElementById('language').value);
+            formData.append('description', document.getElementById('description').value);
+
+            // Prices
+            formData.append('priceStandard', document.getElementById('priceStandard').value);
+            formData.append('priceVip', document.getElementById('priceVip').value);
+            formData.append('priceCouple', document.getElementById('priceCouple').value);
+
+            // Showtimes
+            const showtimes = [];
+            for (let i = 1; i <= showtimeCount; i++) {
+                const cinemaInput = document.querySelector(`input[name="cinema-${i}"]`);
+                if (!cinemaInput) continue;
+
+                const cinema = cinemaInput.value;
+                const date = document.querySelector(`input[name="date-${i}"]`).value;
+                const format = document.querySelector(`select[name="format-${i}"]`).value;
+                const timesStr = document.querySelector(`input[name="times-${i}"]`).value;
+                const times = timesStr.split(',').map(t => t.trim()).filter(t => t);
+
+                if (cinema && date && times.length > 0) {
+                    showtimes.push({ cinema, date, format, times });
+                }
+            }
+            formData.append('showtimes', JSON.stringify(showtimes));
+
+            try {
+                const movieId = document.getElementById('movie-id').value;
+                const url = movieId ? `${API_URL}/${movieId}` : API_URL;
+                const method = movieId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.code === 'success') {
+                    showAlert(result.message, 'success');
+                    if (!movieId) {
+                        resetForm();
+                    }
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra: ' + error.message, 'error');
+            }
+        });
+
+        // Load movie if ID in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const movieId = urlParams.get('id');
+            
+            if (movieId) {
+                loadMovie(movieId);
+            } else {
+                // Add default showtime
+                addShowtime();
+            }
+        });
+
+        async function loadMovie(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                const result = await response.json();
+
+                if (result.code === 'success') {
+                    const movie = result.data.movie;
+                    
+                    document.getElementById('movie-id').value = movie._id;
+                    document.getElementById('name').value = movie.name;
+                    document.getElementById('category').value = movie.category || '';
+                    document.getElementById('status').value = movie.status;
+                    document.getElementById('duration').value = movie.duration || '';
+                    document.getElementById('ageRating').value = movie.ageRating || 'P';
+                    document.getElementById('director').value = movie.director || '';
+                    document.getElementById('releaseDate').value = movie.releaseDateFormat || '';
+                    document.getElementById('cast').value = movie.cast || '';
+                    document.getElementById('language').value = movie.language || '';
+                    document.getElementById('description').value = movie.description || '';
+
+                    if (movie.prices) {
+                        document.getElementById('priceStandard').value = movie.prices.standard || 50000;
+                        document.getElementById('priceVip').value = movie.prices.vip || 70000;
+                        document.getElementById('priceCouple').value = movie.prices.couple || 130000;
+                    }
+
+                    // Load showtimes
+                    if (movie.showtimes && movie.showtimes.length > 0) {
+                        movie.showtimes.forEach(st => {
+                            addShowtime();
+                            const count = showtimeCount;
+                            document.querySelector(`input[name="cinema-${count}"]`).value = st.cinema;
+                            document.querySelector(`input[name="date-${count}"]`).value = new Date(st.date).toISOString().split('T')[0];
+                            document.querySelector(`select[name="format-${count}"]`).value = st.format || '2D';
+                            document.querySelector(`input[name="times-${count}"]`).value = st.times.join(', ');
+                        });
+                    }
+
+                    showAlert('Đã tải thông tin phim', 'success');
+                }
+            } catch (error) {
+                console.error('Error loading movie:', error);
+                showAlert('Không thể tải phim: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

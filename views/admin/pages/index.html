@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý phim</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+</head>
+
+<body>
+  <!-- Placeholder cho header -->
+  <div id="header-placeholder"></div>
+
+  <!-- Placeholder cho sider -->
+  <div id="sider-placeholder"></div>
+
+  <!-- Main content -->
+  <main class="main">
+    <h1 class="box-title">Quản lý phim</h1>
+
+    <!-- Section 4: Bộ lọc -->
+    <div class="section-4">
+      <div class="inner-wrap">
+        <div class="inner-item inner-label">
+          <i class="fa-solid fa-filter"></i> Bộ lọc
+        </div>
+        <div class="inner-item">
+          <select id="filter-status">
+            <option value="">Trạng thái</option>
+            <option value="active">Hoạt động</option>
+            <option value="inactive">Tạm dừng</option>
+          </select>
+        </div>
+        <div class="inner-item">
+          <select id="filter-created-by">
+            <option value="">Người tạo</option>
+            <option value="" disabled>(Chưa hỗ trợ)</option>
+          </select>
+        </div>
+        <div class="inner-item inner-date">
+          <input type="date" id="filter-start-date">
+          <span>-</span>
+          <input type="date" id="filter-end-date">
+        </div>
+        <div class="inner-item inner-reset" id="filter-reset">
+          <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5 -->
+    <div class="section-5">
+      <div class="inner-wrap">
+        <div class="inner-change-status" id="change-multi">
+          <div class="inner-item">
+            <select id="change-multi-select">
+              <option value="">-- Hành động --</option>
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Dừng hoạt động</option>
+              <option value="delete">Xóa</option>
+            </select>
+          </div>
+          <div class="inner-item">
+            <button id="change-multi-btn">Áp dụng</button>
+          </div>
+        </div>
+        <div class="inner-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Tìm kiếm" id="search-keyword">
+        </div>
+        <div class="inner-button-create">
+          <a href="create.html">+ Tạo mới</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6: Table -->
+    <div class="section-6">
+      <div class="table-2">
+        <table>
+          <thead>
+            <tr>
+              <th class="inner-center">
+                <input type="checkbox" class="inner-check" id="check-all">
+              </th>
+              <th>Tên phim</th>
+              <th>Ảnh đại diện</th>
+              <th>Giá vé</th>
+              <th>Thời lượng</th>
+              <th>Ngày công chiếu</th>
+              <th class="inner-center">Vị trí</th>
+              <th class="inner-center">Trạng thái</th>
+              <th>Tạo bởi</th>
+              <th>Cập nhật bởi</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="movie-tbody">
+            <tr>
+              <td colspan="11" class="inner-center">Đang tải dữ liệu...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 7 -->
+    <div class="section-7">
+      <span class="inner-label" id="pagination-label">Đang tải...</span>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const API_BASE = 'http://localhost:3002/api/catalog/admin/movies';
+
+    // Load header
+    fetch('partials/header.html')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('header-placeholder').innerHTML = html;
+      });
+
+    // Load sider
+    fetch('partials/sider.html')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('sider-placeholder').innerHTML = html;
+        // Khởi tạo menu mobile sau khi load sider
+        const buttonMenu = document.querySelector('.inner-button-menu');
+        const sider = document.querySelector('.sider');
+        const overlay = document.querySelector('.sider-overlay');
+        if (buttonMenu && sider && overlay) {  // Thêm kiểm tra null
+          buttonMenu.addEventListener('click', () => {
+            sider.classList.add('active');
+            overlay.classList.add('active');
+          });
+          overlay.addEventListener('click', () => {
+            sider.classList.remove('active');
+            overlay.classList.remove('active');
+          });
+        }
+      });
+
+    async function loadMovies() {
+      const tbody = document.getElementById('movie-tbody');
+      tbody.innerHTML = '<tr><td colspan="11" class="inner-center">Đang tải dữ liệu...</td></tr>';
+
+      try {
+        const response = await axios.get(API_BASE);
+        const result = response.data;
+
+        if (result.code === "success") {
+          renderMovies(result.data);
+          document.getElementById('pagination-label').innerText = `Tổng cộng: ${result.data.length} phim`;
+        } else {
+          tbody.innerHTML = `<tr><td colspan="11" class="inner-center">Lỗi: ${result.message}</td></tr>`;
+        }
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="11" class="inner-center">Lỗi kết nối đến Catalog Service</td></tr>';
+        console.error('Lỗi load movies:', error);
+      }
+    }
+
+    function renderMovies(movies) {
+      const tbody = document.getElementById('movie-tbody');
+      tbody.innerHTML = '';
+
+      if (movies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="inner-center">Chưa có phim nào. Nhấn "+ Tạo mới" để thêm!</td></tr>';
+        return;
+      }
+
+      movies.forEach(movie => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="inner-center">
+            <input type="checkbox" class="inner-check" check-item="${movie._id}">
+          </td>
+          <td>${movie.name || ''}</td>
+          <td>
+            ${movie.avatar ? `<img src="${movie.avatar}" class="inner-avatar">` : ''}
+          </td>
+          <td>
+            <div>Thường: ${((movie.prices && movie.prices.standard) || 0).toLocaleString("vi-VN")}đ</div>
+            <div>VIP: ${((movie.prices && movie.prices.vip) || 0).toLocaleString("vi-VN")}đ</div>
+            <div>Đôi: ${((movie.prices && movie.prices.couple) || 0).toLocaleString("vi-VN")}đ</div>
+          </td>
+          <td class="inner-center">${movie.duration || '--'}</td>
+          <td class="inner-center">
+            <div>${movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString('vi-VN') : '--'}</div>
+          </td>
+          
+          <td class="inner-center">${movie.position || '--'}</td>
+
+          <td class="inner-center">
+            ${movie.status === "active" ? '<span class="badge badge-green">Hoạt động</span>' : '<span class="badge badge-red">Dừng hoạt động</span>'}
+          </td>
+
+          
+          <td>
+            <div>${movie.createdByFullName || '--'}</div>
+            <div class="inner-time">${movie.createdAtFormat || '--'}</div>
+          </td>
+
+          <td>
+            <div>${movie.updatedByFullName || '--'}</div>
+            <div class="inner-time">${movie.updatedAtFormat || '--'}</div>
+          </td>
+          
+
+          <td>
+            <div class="inner-buttons">
+              <a href="edit.html?id=${movie._id}" class="inner-edit">
+                <i class="fa-regular fa-pen-to-square"></i>
+              </a>
+              <button class="inner-delete" onclick="deleteMovie('${movie._id}')">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteMovie(id) {
+      if (confirm('Xóa phim này?')) {
+        try {
+          await axios.delete(`${API_BASE}/${id}`);
+          loadMovies();
+        } catch (error) {
+          alert('Lỗi xóa phim');
+        }
+      }
+    }
+
+    // Gọi loadMovies ngay lập tức
+    loadMovies();
+  </script>
+</body>
+
+</html>
