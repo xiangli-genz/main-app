@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chỉnh sửa phim</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/filepond@^4/dist/filepond.css">
+  <link rel="stylesheet" href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css">
+  <!-- TinyMCE - CDN miễn phí, không cần API key -->
+  <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+</head>
+<body>
+  <!-- Placeholder cho header -->
+  <div id="header-placeholder"></div>
+
+  <!-- Placeholder cho sider -->
+  <div id="sider-placeholder"></div>
+
+  <!-- Main content -->
+  <main class="main">
+      <h1 class="box-title">Đặt vé: <span id="bookingCode">BK001</span></h1>
+
+      <div class="section-8">
+        <form id="booking-edit-form">
+          <!-- Thông tin phim -->
+          <div class="inner-group">
+            <label class="inner-label">Thông tin phim</label>
+            <div class="inner-order-list">
+              <div class="inner-order-item">
+                <div class="inner-order-image">
+                  <img id="movieAvatar" src="https://via.placeholder.com/80x120" alt="Movie">
+                </div>
+                <div class="inner-order-content">
+                  <div class="inner-order-name" id="movieName">Avengers: Endgame</div>
+                  <div class="inner-order-text">Rạp: <span id="cinema">CGV Vincom</span></div>
+                  <div class="inner-order-text">Ngày: <span id="showtimeDate">28/12/2025</span></div>
+                  <div class="inner-order-text">Giờ: <span id="showtimeTime">19:30</span></div>
+                  <div class="inner-order-text">Định dạng: <span id="showtimeFormat">2D</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin ghế -->
+          <div class="inner-group">
+            <label class="inner-label">Thông tin ghế</label>
+            <div class="inner-order-total" id="seatsInfo">
+              <div>Đang tải...</div>
+            </div>
+          </div>
+
+          <!-- Combo đã chọn -->
+          <div class="inner-group">
+            <label class="inner-label">Combo đã chọn</label>
+            <div class="inner-order-total" id="combosInfo">
+              <div>Không có combo</div>
+            </div>
+          </div>
+
+          <!-- Trạng thái thanh toán -->
+          <div class="inner-group">
+            <label class="inner-label" for="paymentStatus">Trạng thái thanh toán</label>
+            <select id="paymentStatus" name="paymentStatus">
+              <option value="pending">Chờ thanh toán</option>
+              <option value="paid">Đã thanh toán</option>
+              <option value="failed">Thanh toán thất bại</option>
+              <option value="refunded">Đã hoàn tiền</option>
+            </select>
+          </div>
+
+          <!-- Trạng thái đặt vé -->
+          <div class="inner-group">
+            <label class="inner-label" for="status">Trạng thái đặt vé</label>
+            <select id="status" name="status">
+              <option value="initial">Khởi tạo</option>
+              <option value="confirmed">Đã xác nhận</option>
+              <option value="cancelled">Đã hủy</option>
+              <option value="completed">Hoàn thành</option>
+            </select>
+          </div>
+
+          <!-- Ngày đặt -->
+          <div class="inner-group">
+            <label class="inner-label" for="createdAt">Ngày đặt</label>
+            <input type="datetime-local" id="createdAt" name="createdAt" readonly>
+          </div>
+
+          <!-- Ghi chú -->
+          <div class="inner-group">
+            <label class="inner-label" for="note">Ghi chú</label>
+            <textarea id="note" name="note" placeholder="Nhập ghi chú..."></textarea>
+          </div>
+
+          <!-- Thanh toán -->
+          <div class="inner-group">
+            <label class="inner-label">Thanh toán</label>
+            <div class="inner-order-total">
+              <div>Tiền vé: <span id="subTotal">0</span>đ</div>
+              <div>Tiền combo: <span id="comboTotal">0</span>đ</div>
+              <div>Giảm giá: <span id="discount">0</span>đ</div>
+              <div>Tổng thanh toán: <span class="inner-order-price" id="total">0</span>đ</div>
+            </div>
+          </div>
+
+          <!-- Button -->
+          <div class="inner-button inner-two-col">
+            <button type="submit">Cập nhật</button>
+          </div>
+        </form>
+
+        <div class="inner-back">
+          <a href="/admin/booking/list">Quay lại danh sách</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+
+  <!-- Section 7 - Phân trang -->
+  <div class="section-7">
+    <span class="inner-label">
+      Hiển thị <span id="startRecord">1</span> - <span id="endRecord">10</span> của <span id="totalRecords">0</span>
+    </span>
+    <select class="inner-pagination" id="pagination">
+      <option value="1">Trang 1</option>
+    </select>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+  <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+
+  <script>
+    // Load header
+    fetch('partials/header.html')
+      .then(response => response.text())
+      .then(html => document.getElementById('header-placeholder').innerHTML = html)
+      .catch(err => console.error('Lỗi load header:', err));
+
+    // Load sider + gắn event menu mobile (chỉ sau khi load xong)
+    fetch('partials/sider.html')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('sider-placeholder').innerHTML = html;
+
+        // Gắn sự kiện menu mobile ngay sau khi insert HTML
+        const buttonMenu = document.querySelector('.inner-button-menu');
+        const sider = document.querySelector('.sider');
+        const overlay = document.querySelector('.sider-overlay');
+
+        if (buttonMenu && sider && overlay) {
+          buttonMenu.addEventListener('click', () => {
+            sider.classList.add('active');
+            overlay.classList.add('active');
+          });
+
+          overlay.addEventListener('click', () => {
+            sider.classList.remove('active');
+            overlay.classList.remove('active');
+          });
+        } else {
+          console.warn('Không tìm thấy các element menu mobile');
+        }
+      })
+      .catch(err => console.error('Lỗi load sider:', err));
+    </script>
+</body>
+</html>

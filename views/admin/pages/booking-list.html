@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chỉnh sửa phim</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/filepond@^4/dist/filepond.css">
+  <link rel="stylesheet" href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css">
+  <!-- TinyMCE - CDN miễn phí, không cần API key -->
+  <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+</head>
+<body>
+  <!-- Placeholder cho header -->
+  <div id="header-placeholder"></div>
+
+  <!-- Placeholder cho sider -->
+  <div id="sider-placeholder"></div>
+
+  <!-- Main content -->
+  <main class="main">
+      <h1 class="box-title">Quản lý đặt vé</h1>
+
+  <!-- Section 4 - Bộ lọc -->
+  <div class="section-4">
+    <div class="inner-wrap">
+      <div class="inner-item inner-label">
+        <i class="fa-solid fa-filter"></i> Bộ lọc
+      </div>
+      <div class="inner-item inner-date">
+        <input type="date" filter-start-date>
+        <span>-</span>
+        <input type="date" filter-end-date>
+      </div>
+      <div class="inner-item inner-reset" filter-reset>
+        <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5 - Tìm kiếm -->
+  <div class="section-5">
+    <div class="inner-wrap">
+      <div class="inner-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Tìm kiếm" search>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6 - Bảng dữ liệu -->
+  <div class="section-6">
+    <div class="table-2">
+      <table>
+        <thead>
+          <tr>
+            <th>Mã đặt vé</th>
+            <th>Thông tin khách</th>
+            <th>Thông tin phim</th>
+            <th>Ghế & Combo</th>
+            <th>Thanh toán</th>
+            <th>Trạng thái</th>
+            <th class="inner-center">Ngày đặt</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="bookingTableBody">
+          <!-- Dữ liệu sẽ được load bằng JavaScript -->
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 30px;">
+              Đang tải dữ liệu...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- Section 7 - Phân trang -->
+  <div class="section-7">
+    <span class="inner-label">
+      Hiển thị <span id="startRecord">1</span> - <span id="endRecord">10</span> của <span id="totalRecords">0</span>
+    </span>
+    <select class="inner-pagination" id="pagination">
+      <option value="1">Trang 1</option>
+    </select>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+  <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+
+  <script>
+    // Load header
+    fetch('partials/header.html')
+      .then(response => response.text())
+      .then(html => document.getElementById('header-placeholder').innerHTML = html)
+      .catch(err => console.error('Lỗi load header:', err));
+
+    // Load sider + gắn event menu mobile (chỉ sau khi load xong)
+    fetch('partials/sider.html')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('sider-placeholder').innerHTML = html;
+
+        // Gắn sự kiện menu mobile ngay sau khi insert HTML
+        const buttonMenu = document.querySelector('.inner-button-menu');
+        const sider = document.querySelector('.sider');
+        const overlay = document.querySelector('.sider-overlay');
+
+        if (buttonMenu && sider && overlay) {
+          buttonMenu.addEventListener('click', () => {
+            sider.classList.add('active');
+            overlay.classList.add('active');
+          });
+
+          overlay.addEventListener('click', () => {
+            sider.classList.remove('active');
+            overlay.classList.remove('active');
+          });
+        } else {
+          console.warn('Không tìm thấy các element menu mobile');
+        }
+      })
+      .catch(err => console.error('Lỗi load sider:', err));
+    </script>
+</body>
+</html>

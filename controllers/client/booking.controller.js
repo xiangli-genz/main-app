@@ -98,7 +98,7 @@ module.exports.create = async (req, res) => {
     // 🔥 VALIDATE VỚI MOVIE SERVICE TRƯỚC KHI GỬI ĐẾN BOOKING SERVICE
     console.log('→ Validating with Movie Service...');
     
-    const movieResponse = await callMovieService(`/api/catalog/client/movies/${bookingData.movieId}`);
+    const movieResponse = await callMovieService(`/api/movies/${bookingData.movieId}`);
     
     if (movieResponse.code !== 'success' || !movieResponse.data) {
       return res.status(404).json({
