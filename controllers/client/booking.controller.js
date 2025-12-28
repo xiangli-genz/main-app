@@ -2,7 +2,7 @@
 const axios = require('axios');
 const path = require('path');
 
-const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3001';
+const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:3002';
 const SERVICE_TOKEN = process.env.SERVICE_TOKEN || '';
 
 // Helper function
@@ -29,7 +29,6 @@ const callBookingService = async (path, method = 'GET', data = null) => {
   }
 };
 
-// ✅ THÊM METHOD NÀY
 // [GET] /booking/seat
 module.exports.seat = async (req, res) => {
   try {
@@ -56,6 +55,16 @@ module.exports.checkout = async (req, res) => {
     res.sendFile(path.join(__dirname, '../../views/client/pages/booking-checkout.html'));
   } catch (error) {
     console.error('Error in checkout page:', error);
+    res.redirect('/');
+  }
+};
+
+// ✅ [GET] /booking/success - THÊM METHOD NÀY
+module.exports.success = async (req, res) => {
+  try {
+    res.sendFile(path.join(__dirname, '../../views/client/pages/booking-success.html'));
+  } catch (error) {
+    console.error('Error in success page:', error);
     res.redirect('/');
   }
 };
@@ -94,6 +103,24 @@ module.exports.bookedSeats = async (req, res) => {
     res.status(500).json({
       code: 'error',
       message: 'Không thể lấy danh sách ghế đã đặt'
+    });
+  }
+};
+
+// ✅ [GET] /booking/:id - API ENDPOINT - THÊM METHOD NÀY
+module.exports.getById = async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    
+    const result = await callBookingService(`/api/bookings/${bookingId}`);
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('Error getting booking:', error);
+    res.status(500).json({
+      code: 'error',
+      message: 'Không thể lấy thông tin booking'
     });
   }
 };

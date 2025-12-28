@@ -13,25 +13,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
 app.use('/views', express.static(path.join(__dirname, 'views')));
 
-// ✅ CLIENT ROUTES
+// ===== LOCAL ROUTES (Mock data - không proxy) =====
+// ✅ Route này sẽ dùng model local thay vì gọi movie-service
+const moviesApiRoute = require('./routes/api/movies.route');
+app.use('/api/movies', moviesApiRoute);
+
+// ===== CLIENT ROUTES =====
 const clientBookingRoutes = require('./routes/client/booking.route');
-const clientPaymentRoutes = require('./routes/client/payment.route');  // ← THÊM
+const clientPaymentRoutes = require('./routes/client/payment.route');
 
-// ✅ API ROUTES - Proxies
-const bookingApiProxy = require('./routes/booking.route');
-const movieApiProxy = require('./routes/movie.route');
-const paymentApiProxy = require('./routes/payment.route');  // ← THÊM
-
-// ✅ Forward API requests
-app.use('/api/bookings', bookingApiProxy);
-app.use('/api/movies', movieApiProxy);
-app.use('/api/payments', paymentApiProxy);  // ← THÊM
-
-// ✅ CLIENT ROUTES
 app.use('/booking', clientBookingRoutes);
-app.use('/payment', clientPaymentRoutes);  // ← THÊM
+app.use('/payment', clientPaymentRoutes);
 
-// ✅ HOME & MOVIE DETAIL ROUTES
+// ===== HOME & MOVIE DETAIL ROUTES =====
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'client', 'pages', 'home.html'));
 });
@@ -39,6 +33,13 @@ app.get('/', (req, res) => {
 app.get('/movie/detail/:movieId', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'client', 'pages', 'movie-detail.html'));
 });
+
+// ===== PROXY ROUTES (cho booking & payment services) =====
+const bookingApiProxy = require('./routes/booking.route');
+const paymentApiProxy = require('./routes/payment.route');
+
+app.use('/api/bookings', bookingApiProxy);
+app.use('/api/payments', paymentApiProxy);
 
 // 404 handler
 app.use((req, res) => {
@@ -53,6 +54,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`✓ Main app running on http://localhost:${PORT}`);
+  console.log(`✓ Using LOCAL movie data (mock)`);
 });
 
 module.exports = app;
