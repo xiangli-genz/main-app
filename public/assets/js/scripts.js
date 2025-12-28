@@ -1,4 +1,5 @@
 // main-app/public/assets/js/scripts.js
+// ✅ ĐÃ SỬA - Xóa loadBookingInfo() tự động chạy
 
 // ===== GLOBAL STATE =====
 const bookingState = {
@@ -257,7 +258,7 @@ function attachShowtimeListeners(grouped) {
     const btnToSeat = document.getElementById('btn-to-seat');
     if (btnToSeat) {
         btnToSeat.addEventListener('click', function(e) {
-            e.preventDefault(); // ← QUAN TRỌNG: Ngăn form submit
+            e.preventDefault();
             
             console.log('🎯 Going to seat selection...');
             console.log('Current state:', bookingState);
@@ -358,7 +359,7 @@ function initSeatGrid() {
         return;
     }
     
-                // Update seat page info safely
+    // Update seat page info safely
     const avatarEl = document.getElementById('seat-movie-avatar');
     if (avatarEl && bookingState.movieAvatar) {
         avatarEl.src = bookingState.movieAvatar;
@@ -677,100 +678,6 @@ async function completeBooking() {
     const selectedPaymentMethod = paymentMethod ? paymentMethod.value : 'cash';
     
     // Prepare payload
-    const payload = {
-        movieId: bookingState.movieId,
-        movieName: bookingState.movieName,
-        movieAvatar: bookingState.movieAvatar,
-        cinema: bookingState.cinema,
-        showtimeDate: bookingState.date,
-        showtimeTime: bookingState.time,
-        showtimeFormat: bookingState.format,
-        seats: bookingState.selectedSeats,
-        combos: bookingState.combos,
-        fullName: name,
-        phone: phone,
-        email: email,
-        note: note,
-        paymentMethod: selectedPaymentMethod
-    };
-    
-    console.log('=== SENDING BOOKING ===', payload);
-    
-    try {
-        const res = await fetch('/api/bookings/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        const data = await res.json();
-        
-        if (data.code === 'success') {
-            const bookingId = data.data.bookingId;
-            
-            bookingState.bookingId = bookingId;
-            sessionStorage.setItem('bookingData', JSON.stringify(bookingState));
-            
-            // Redirect to success page
-            window.location.href = `/booking/success?bookingId=${bookingId}`;
-            
-        } else {
-            alert(data.message || 'Đặt vé thất bại!');
-        }
-    } catch (err) {
-        console.error('Error creating booking:', err);
-        alert('Không thể kết nối tới server!');
-    }
-}
-
-// ===== UTILITY =====
-function formatPrice(price) {
-    return price.toLocaleString('vi-VN') + 'đ';
-}
-
-// ===== 🔥 COMPLETE BOOKING WITH PAYMENT HANDLING (CẬP NHẬT) =====
-async function completeBooking() {
-    const nameInput = document.getElementById('customer-name');
-    const phoneInput = document.getElementById('customer-phone');
-    const emailInput = document.getElementById('customer-email');
-    const noteInput = document.getElementById('customer-note');
-    const paymentMethod = document.querySelector('input[name="payment"]:checked');
-    
-    if (!nameInput || !phoneInput) {
-        alert('Không tìm thấy form!');
-        return;
-    }
-    
-    const name = nameInput.value.trim();
-    const phone = phoneInput.value.trim();
-    const email = emailInput ? emailInput.value.trim() : '';
-    const note = noteInput ? noteInput.value.trim() : '';
-    
-    // Validation
-    if (!name) {
-        alert('Vui lòng nhập họ tên!');
-        nameInput.focus();
-        return;
-    }
-    
-    if (!phone) {
-        alert('Vui lòng nhập số điện thoại!');
-        phoneInput.focus();
-        return;
-    }
-    
-    const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
-    if (!phoneRegex.test(phone)) {
-        alert('Số điện thoại không đúng định dạng!');
-        phoneInput.focus();
-        return;
-    }
-    
-    const selectedPaymentMethod = paymentMethod ? paymentMethod.value : 'cash';
-    
-    // ✅ BƯỚC 1: Tạo booking
     const bookingPayload = {
         movieId: bookingState.movieId,
         movieName: bookingState.movieName,
@@ -788,7 +695,7 @@ async function completeBooking() {
         paymentMethod: selectedPaymentMethod
     };
     
-    console.log('=== STEP 1: CREATING BOOKING ===', bookingPayload);
+    console.log('=== SENDING BOOKING ===', bookingPayload);
     
     try {
         // Disable button
@@ -820,13 +727,13 @@ async function completeBooking() {
         bookingState.bookingCode = bookingData.data.bookingCode;
         sessionStorage.setItem('bookingData', JSON.stringify(bookingState));
         
-        // ✅ BƯỚC 2: Xử lý thanh toán
+        // Handle payment
         if (selectedPaymentMethod === 'cash') {
             // Tiền mặt → Success luôn
             window.location.href = `/booking/success?bookingId=${bookingData.data.bookingId}`;
         } else {
             // Online payment → Tạo payment
-            console.log('=== STEP 2: CREATING PAYMENT ===');
+            console.log('=== CREATING PAYMENT ===');
             
             const paymentPayload = {
                 bookingId: bookingData.data.bookingId,
@@ -878,438 +785,591 @@ async function completeBooking() {
     }
 }
 
-/* ============================================ */
-/* FILE 4: main-app/public/assets/js/payment-processing.js */
-/* ============================================ */
-
-(function() {
-    'use strict';
-    
-    // Get payment ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentId = urlParams.get('paymentId');
-    
-    // Payment status polling
-    let pollCount = 0;
-    const maxPolls = 60; // 60 times x 2s = 2 minutes
-    let pollInterval = null;
-    
-    // Initialize
-    if (paymentId) {
-        console.log('Payment ID:', paymentId);
-        startPolling();
-    } else {
-        console.warn('No payment ID found');
-        showError('Không tìm thấy thông tin thanh toán');
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 3000);
-    }
-    
-    // Start polling payment status
-    function startPolling() {
-        // Initial check
-        checkPaymentStatus();
-        
-        // Poll every 2 seconds
-        pollInterval = setInterval(() => {
-            checkPaymentStatus();
-        }, 2000);
-    }
-    
-    // Check payment status
-    async function checkPaymentStatus() {
-        try {
-            const response = await fetch(`/payment/status/${paymentId}`);
-            const data = await response.json();
-            
-            if (data.code === 'success' && data.data.payment) {
-                const payment = data.data.payment;
-                
-                console.log('Payment status:', payment.status);
-                
-                // Update UI with payment info
-                updatePaymentInfo(payment);
-                
-                // Check payment status
-                if (payment.status === 'completed') {
-                    clearInterval(pollInterval);
-                    console.log('✓ Payment completed');
-                    
-                    // Show success message briefly
-                    document.querySelector('.payment-title').textContent = 'Thanh toán thành công!';
-                    document.querySelector('.payment-icon').innerHTML = '<i class="fa-solid fa-check-circle" style="color: #4CAF50;"></i>';
-                    
-                    // Redirect to success page
-                    setTimeout(() => {
-                        window.location.href = `/booking/success?bookingId=${payment.bookingId}`;
-                    }, 1500);
-                    
-                } else if (payment.status === 'failed' || payment.status === 'cancelled') {
-                    clearInterval(pollInterval);
-                    console.log('✗ Payment failed/cancelled');
-                    
-                    // Redirect to failed page
-                    setTimeout(() => {
-                        window.location.href = `/payment/failed?bookingId=${payment.bookingId}`;
-                    }, 1500);
-                }
-            } else {
-                console.warn('Payment not found or invalid response');
-            }
-            
-            // Update progress
-            pollCount++;
-            updateProgress(pollCount, maxPolls);
-            
-            // Check timeout
-            if (pollCount >= maxPolls) {
-                clearInterval(pollInterval);
-                console.warn('Payment check timeout');
-                
-                // Redirect to failed page with timeout error
-                window.location.href = '/payment/failed?error=timeout';
-            }
-            
-        } catch (error) {
-            console.error('Poll error:', error);
-            
-            pollCount++;
-            if (pollCount >= maxPolls) {
-                clearInterval(pollInterval);
-                window.location.href = '/payment/failed?error=connection';
-            }
-        }
-    }
-    
-    // Update payment info in UI
-    function updatePaymentInfo(payment) {
-        const paymentCodeEl = document.getElementById('payment-code');
-        const paymentAmountEl = document.getElementById('payment-amount');
-        const paymentMethodEl = document.getElementById('payment-method');
-        const paymentInfoBox = document.getElementById('payment-info');
-        
-        if (paymentCodeEl) {
-            paymentCodeEl.textContent = payment.paymentCode;
-        }
-        
-        if (paymentAmountEl) {
-            paymentAmountEl.textContent = formatPrice(payment.amount);
-        }
-        
-        if (paymentMethodEl) {
-            paymentMethodEl.textContent = getPaymentMethodName(payment.method);
-        }
-        
-        if (paymentInfoBox) {
-            paymentInfoBox.style.display = 'block';
-        }
-    }
-    
-    // Update progress bar
-    function updateProgress(current, max) {
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
-        
-        const percentage = Math.min((current / max) * 100, 100);
-        
-        if (progressFill) {
-            progressFill.style.width = percentage + '%';
-        }
-        
-        if (progressText) {
-            const timeRemaining = Math.ceil((max - current) * 2 / 60);
-            if (timeRemaining > 0) {
-                progressText.textContent = `Đang kiểm tra... (${timeRemaining} phút còn lại)`;
-            } else {
-                progressText.textContent = 'Đang hoàn tất...';
-            }
-        }
-    }
-    
-    // Show error message
-    function showError(message) {
-        const container = document.querySelector('.payment-container');
-        if (container) {
-            container.innerHTML = `
-                <div class="payment-icon" style="color: #EF5350;">
-                    <i class="fa-solid fa-exclamation-triangle"></i>
-                </div>
-                <h2 class="payment-title">Có lỗi xảy ra</h2>
-                <p class="payment-description">${message}</p>
-                <button class="btn btn-primary" onclick="window.location.href='/'">
-                    <i class="fa-solid fa-home"></i> Về trang chủ
-                </button>
-            `;
-        }
-    }
-    
-    // Format price
-    function formatPrice(price) {
-        return price.toLocaleString('vi-VN') + 'đ';
-    }
-    
-    // Get payment method name
-    function getPaymentMethodName(method) {
-        const methods = {
-            'cash': 'Tiền mặt',
-            'momo': 'Ví MoMo',
-            'zalopay': 'ZaloPay',
-            'vnpay': 'VNPay',
-            'bank': 'Chuyển khoản ngân hàng'
-        };
-        return methods[method] || method;
-    }
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-        }
-    });
-    
-})();
-
-/* ============================================ */
-/* FILE 5: main-app/public/assets/js/payment-failed.js */
-/* ============================================ */
-
-(function() {
-    'use strict';
-    
-    // Get URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const bookingId = urlParams.get('bookingId');
-    const error = urlParams.get('error');
-    
-    console.log('Booking ID:', bookingId);
-    console.log('Error:', error);
-    
-    // Show error message based on error type
-    if (error) {
-        showErrorMessage(error);
-    }
-    
-    // Load booking info if available
-    if (bookingId) {
-        loadBookingInfo(bookingId);
-    }
-    
-    // Show specific error message
-    function showErrorMessage(errorType) {
-        const descriptionEl = document.querySelector('.payment-description');
-        if (!descriptionEl) return;
-        
-        const errorMessages = {
-            'timeout': 'Giao dịch đã hết thời gian chờ. Vui lòng thử lại.',
-            'connection': 'Không thể kết nối với hệ thống thanh toán. Vui lòng kiểm tra kết nối mạng.',
-            'invalid_signature': 'Chữ ký giao dịch không hợp lệ. Vui lòng liên hệ hỗ trợ.',
-            'payment_not_found': 'Không tìm thấy thông tin thanh toán.',
-            'system_error': 'Lỗi hệ thống. Vui lòng thử lại sau.'
-        };
-        
-        const message = errorMessages[errorType] || 'Có lỗi xảy ra trong quá trình thanh toán.';
-        descriptionEl.innerHTML = message + '<br>Vui lòng thử lại hoặc chọn phương thức thanh toán khác.';
-    }
-    
-    // Load booking information
-    async function loadBookingInfo(bookingId) {
-        try {
-            console.log('Loading booking info for:', bookingId);
-            
-            const response = await fetch(`/booking/${bookingId}`);
-            const data = await response.json();
-            
-            if (data.code === 'success' && data.data.booking) {
-                const booking = data.data.booking;
-                
-                console.log('Booking loaded:', booking);
-                
-                // Update UI
-                const bookingCodeEl = document.getElementById('booking-code');
-                const bookingAmountEl = document.getElementById('booking-amount');
-                const bookingInfoBox = document.getElementById('booking-info');
-                
-                if (bookingCodeEl) {
-                    bookingCodeEl.textContent = booking.bookingCode;
-                }
-                
-                if (bookingAmountEl) {
-                    bookingAmountEl.textContent = formatPrice(booking.total);
-                }
-                
-                if (bookingInfoBox) {
-                    bookingInfoBox.style.display = 'block';
-                }
-                
-            } else {
-                console.warn('Booking not found or invalid response');
-            }
-            
-        } catch (error) {
-            console.error('Error loading booking:', error);
-        }
-    }
-    
-    // Retry payment function
-    window.retryPayment = function() {
-        if (bookingId) {
-            // Go back to checkout page with booking ID
-            window.location.href = `/booking/checkout?bookingId=${bookingId}`;
-        } else {
-            // No booking ID, go to home
-            window.location.href = '/';
-        }
-    };
-    
-    // Format price helper
-    function formatPrice(price) {
-        return price.toLocaleString('vi-VN') + 'đ';
-    }
-    
-})();
-
-// Get booking ID from URL
-const urlParams = new URLSearchParams(window.location.search);
-const bookingId = urlParams.get('bookingId');
-
-// Load booking info
-async function loadBookingInfo() {
-    const loadingState = document.getElementById('loading-state');
-    const successContent = document.getElementById('success-content');
-    const errorState = document.getElementById('error-state');
-    
-    if (!bookingId) {
-        loadingState.style.display = 'none';
-        errorState.style.display = 'block';
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/bookings/${bookingId}`);
-        const data = await response.json();
-        
-        if (data.code === 'success' && data.data.booking) {
-            const booking = data.data.booking;
-            
-            // Hide loading, show success
-            loadingState.style.display = 'none';
-            successContent.style.display = 'block';
-            
-            // Update UI
-            updateSuccessPage(booking);
-            
-            // Clear session storage
-            sessionStorage.removeItem('bookingData');
-            
-        } else {
-            throw new Error('Booking not found');
-        }
-        
-    } catch (error) {
-        console.error('Error loading booking:', error);
-        loadingState.style.display = 'none';
-        errorState.style.display = 'block';
-    }
-}
-
-// Update success page with booking data
-function updateSuccessPage(booking) {
-    // Booking code
-    document.getElementById('booking-code-display').textContent = booking.bookingCode;
-    
-    // Success message
-    const messageEl = document.getElementById('success-message');
-    if (booking.paymentStatus === 'paid') {
-        messageEl.innerHTML = 'Cảm ơn bạn đã đặt vé! Vé của bạn đã được thanh toán thành công.<br>Vui lòng đến rạp trước giờ chiếu ít nhất 15 phút.';
-    } else {
-        messageEl.innerHTML = 'Cảm ơn bạn đã đặt vé! Vui lòng thanh toán tại quầy vé trước giờ chiếu.';
-        
-        // Show cash payment notice
-        const cashNotice = document.getElementById('cash-payment-notice');
-        cashNotice.style.display = 'block';
-        document.getElementById('cash-booking-code').textContent = booking.bookingCode;
-        document.getElementById('cash-total-amount').textContent = formatPrice(booking.total);
-    }
-    
-    // Movie info
-    if (booking.movieAvatar) {
-        const avatarEl = document.getElementById('success-movie-avatar');
-        avatarEl.src = booking.movieAvatar;
-        avatarEl.style.display = 'block';
-    }
-    
-    document.getElementById('success-movie-name').textContent = booking.movieName || '-';
-    document.getElementById('success-cinema').textContent = booking.cinema || '-';
-    
-    // Date & Time
-    if (booking.showtime) {
-        const dateObj = new Date(booking.showtime.date);
-        document.getElementById('success-date').textContent = dateObj.toLocaleDateString('vi-VN');
-        document.getElementById('success-time').textContent = 
-            `${booking.showtime.time} - ${booking.showtime.format || '2D'}`;
-    }
-    
-    // Seats
-    if (booking.seats && booking.seats.length > 0) {
-        const seatNumbers = booking.seats.map(s => s.seatNumber).join(', ');
-        document.getElementById('success-seats').textContent = seatNumbers;
-    }
-    
-    // Combos
-    if (booking.combos && booking.combos.length > 0) {
-        const comboRow = document.getElementById('combo-row');
-        comboRow.style.display = 'flex';
-        
-        const comboTexts = booking.combos.map(c => 
-            `${c.name} (x${c.quantity})`
-        ).join(', ');
-        document.getElementById('success-combos').textContent = comboTexts;
-    }
-    
-    // Prices
-    document.getElementById('success-total').textContent = formatPrice(booking.total);
-    
-    // Payment info
-    const paymentMethods = {
-        'cash': 'Tiền mặt',
-        'momo': 'Ví MoMo',
-        'zalopay': 'ZaloPay',
-        'vnpay': 'VNPay',
-        'bank': 'Chuyển khoản'
-    };
-    document.getElementById('success-payment-method').textContent = 
-        paymentMethods[booking.paymentMethod] || booking.paymentMethod;
-    
-    const paymentStatuses = {
-        'paid': 'Đã thanh toán',
-        'unpaid': 'Chưa thanh toán'
-    };
-    const statusEl = document.getElementById('success-payment-status');
-    statusEl.textContent = paymentStatuses[booking.paymentStatus] || booking.paymentStatus;
-    statusEl.style.color = booking.paymentStatus === 'paid' ? 
-        'var(--color-success)' : 'var(--color-warning)';
-    
-    // Customer info
-    document.getElementById('success-customer-name').textContent = booking.fullName || '-';
-    document.getElementById('success-customer-phone').textContent = booking.phone || '-';
-    
-    if (booking.email) {
-        const emailRow = document.getElementById('email-row');
-        emailRow.style.display = 'flex';
-        document.getElementById('success-customer-email').textContent = booking.email;
-    }
-}
-
-// Print ticket
-function printTicket() {
-    window.print();
-}
-
-// Format price
+// ===== UTILITY =====
 function formatPrice(price) {
     return price.toLocaleString('vi-VN') + 'đ';
 }
 
-// Load booking on page load
-loadBookingInfo();
+// // ===== 🔥 COMPLETE BOOKING WITH PAYMENT HANDLING (CẬP NHẬT) =====
+// async function completeBooking() {
+//     const nameInput = document.getElementById('customer-name');
+//     const phoneInput = document.getElementById('customer-phone');
+//     const emailInput = document.getElementById('customer-email');
+//     const noteInput = document.getElementById('customer-note');
+//     const paymentMethod = document.querySelector('input[name="payment"]:checked');
+    
+//     if (!nameInput || !phoneInput) {
+//         alert('Không tìm thấy form!');
+//         return;
+//     }
+    
+//     const name = nameInput.value.trim();
+//     const phone = phoneInput.value.trim();
+//     const email = emailInput ? emailInput.value.trim() : '';
+//     const note = noteInput ? noteInput.value.trim() : '';
+    
+//     // Validation
+//     if (!name) {
+//         alert('Vui lòng nhập họ tên!');
+//         nameInput.focus();
+//         return;
+//     }
+    
+//     if (!phone) {
+//         alert('Vui lòng nhập số điện thoại!');
+//         phoneInput.focus();
+//         return;
+//     }
+    
+//     const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+//     if (!phoneRegex.test(phone)) {
+//         alert('Số điện thoại không đúng định dạng!');
+//         phoneInput.focus();
+//         return;
+//     }
+    
+//     const selectedPaymentMethod = paymentMethod ? paymentMethod.value : 'cash';
+    
+//     // ✅ BƯỚC 1: Tạo booking
+//     const bookingPayload = {
+//         movieId: bookingState.movieId,
+//         movieName: bookingState.movieName,
+//         movieAvatar: bookingState.movieAvatar,
+//         cinema: bookingState.cinema,
+//         showtimeDate: bookingState.date,
+//         showtimeTime: bookingState.time,
+//         showtimeFormat: bookingState.format,
+//         seats: bookingState.selectedSeats,
+//         combos: bookingState.combos,
+//         fullName: name,
+//         phone: phone,
+//         email: email,
+//         note: note,
+//         paymentMethod: selectedPaymentMethod
+//     };
+    
+//     console.log('=== STEP 1: CREATING BOOKING ===', bookingPayload);
+    
+//     try {
+//         // Disable button
+//         const submitBtn = event.target;
+//         submitBtn.disabled = true;
+//         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+        
+//         const bookingRes = await fetch('/booking/create', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify(bookingPayload)
+//         });
+        
+//         const bookingData = await bookingRes.json();
+        
+//         if (bookingData.code !== 'success') {
+//             alert(bookingData.message || 'Đặt vé thất bại!');
+//             submitBtn.disabled = false;
+//             submitBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Xác nhận đặt vé';
+//             return;
+//         }
+        
+//         console.log('✓ Booking created:', bookingData.data.bookingId);
+        
+//         // Lưu booking info
+//         bookingState.bookingId = bookingData.data.bookingId;
+//         bookingState.bookingCode = bookingData.data.bookingCode;
+//         sessionStorage.setItem('bookingData', JSON.stringify(bookingState));
+        
+//         // ✅ BƯỚC 2: Xử lý thanh toán
+//         if (selectedPaymentMethod === 'cash') {
+//             // Tiền mặt → Success luôn
+//             window.location.href = `/booking/success?bookingId=${bookingData.data.bookingId}`;
+//         } else {
+//             // Online payment → Tạo payment
+//             console.log('=== STEP 2: CREATING PAYMENT ===');
+            
+//             const paymentPayload = {
+//                 bookingId: bookingData.data.bookingId,
+//                 bookingCode: bookingData.data.bookingCode,
+//                 amount: bookingState.ticketPrice + bookingState.comboTotal,
+//                 method: selectedPaymentMethod,
+//                 customerName: name,
+//                 customerPhone: phone,
+//                 customerEmail: email
+//             };
+            
+//             const paymentRes = await fetch('/payment/create', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json'
+//                 },
+//                 body: JSON.stringify(paymentPayload)
+//             });
+            
+//             const paymentData = await paymentRes.json();
+            
+//             if (paymentData.code === 'success') {
+//                 console.log('✓ Payment created:', paymentData.data.paymentCode);
+                
+//                 // Nếu có payment URL → redirect
+//                 if (paymentData.data.paymentUrl) {
+//                     window.location.href = paymentData.data.paymentUrl;
+//                 } else {
+//                     // Không có URL → redirect to processing page
+//                     window.location.href = `/payment/processing?paymentId=${paymentData.data.paymentId}`;
+//                 }
+//             } else {
+//                 alert(paymentData.message || 'Không thể tạo thanh toán!');
+//                 submitBtn.disabled = false;
+//                 submitBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Xác nhận đặt vé';
+//             }
+//         }
+        
+//     } catch (err) {
+//         console.error('Error:', err);
+//         alert('Không thể kết nối tới server!');
+        
+//         // Re-enable button
+//         const submitBtn = document.querySelector('.btn-success');
+//         if (submitBtn) {
+//             submitBtn.disabled = false;
+//             submitBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Xác nhận đặt vé';
+//         }
+//     }
+// }
+
+// /* ============================================ */
+// /* FILE 4: main-app/public/assets/js/payment-processing.js */
+// /* ============================================ */
+
+// (function() {
+//     'use strict';
+    
+//     // Get payment ID from URL
+//     const urlParams = new URLSearchParams(window.location.search);
+//     const paymentId = urlParams.get('paymentId');
+    
+//     // Payment status polling
+//     let pollCount = 0;
+//     const maxPolls = 60; // 60 times x 2s = 2 minutes
+//     let pollInterval = null;
+    
+//     // Initialize
+//     if (paymentId) {
+//         console.log('Payment ID:', paymentId);
+//         startPolling();
+//     } else {
+//         console.warn('No payment ID found');
+//         showError('Không tìm thấy thông tin thanh toán');
+//         setTimeout(() => {
+//             window.location.href = '/';
+//         }, 3000);
+//     }
+    
+//     // Start polling payment status
+//     function startPolling() {
+//         // Initial check
+//         checkPaymentStatus();
+        
+//         // Poll every 2 seconds
+//         pollInterval = setInterval(() => {
+//             checkPaymentStatus();
+//         }, 2000);
+//     }
+    
+//     // Check payment status
+//     async function checkPaymentStatus() {
+//         try {
+//             const response = await fetch(`/payment/status/${paymentId}`);
+//             const data = await response.json();
+            
+//             if (data.code === 'success' && data.data.payment) {
+//                 const payment = data.data.payment;
+                
+//                 console.log('Payment status:', payment.status);
+                
+//                 // Update UI with payment info
+//                 updatePaymentInfo(payment);
+                
+//                 // Check payment status
+//                 if (payment.status === 'completed') {
+//                     clearInterval(pollInterval);
+//                     console.log('✓ Payment completed');
+                    
+//                     // Show success message briefly
+//                     document.querySelector('.payment-title').textContent = 'Thanh toán thành công!';
+//                     document.querySelector('.payment-icon').innerHTML = '<i class="fa-solid fa-check-circle" style="color: #4CAF50;"></i>';
+                    
+//                     // Redirect to success page
+//                     setTimeout(() => {
+//                         window.location.href = `/booking/success?bookingId=${payment.bookingId}`;
+//                     }, 1500);
+                    
+//                 } else if (payment.status === 'failed' || payment.status === 'cancelled') {
+//                     clearInterval(pollInterval);
+//                     console.log('✗ Payment failed/cancelled');
+                    
+//                     // Redirect to failed page
+//                     setTimeout(() => {
+//                         window.location.href = `/payment/failed?bookingId=${payment.bookingId}`;
+//                     }, 1500);
+//                 }
+//             } else {
+//                 console.warn('Payment not found or invalid response');
+//             }
+            
+//             // Update progress
+//             pollCount++;
+//             updateProgress(pollCount, maxPolls);
+            
+//             // Check timeout
+//             if (pollCount >= maxPolls) {
+//                 clearInterval(pollInterval);
+//                 console.warn('Payment check timeout');
+                
+//                 // Redirect to failed page with timeout error
+//                 window.location.href = '/payment/failed?error=timeout';
+//             }
+            
+//         } catch (error) {
+//             console.error('Poll error:', error);
+            
+//             pollCount++;
+//             if (pollCount >= maxPolls) {
+//                 clearInterval(pollInterval);
+//                 window.location.href = '/payment/failed?error=connection';
+//             }
+//         }
+//     }
+    
+//     // Update payment info in UI
+//     function updatePaymentInfo(payment) {
+//         const paymentCodeEl = document.getElementById('payment-code');
+//         const paymentAmountEl = document.getElementById('payment-amount');
+//         const paymentMethodEl = document.getElementById('payment-method');
+//         const paymentInfoBox = document.getElementById('payment-info');
+        
+//         if (paymentCodeEl) {
+//             paymentCodeEl.textContent = payment.paymentCode;
+//         }
+        
+//         if (paymentAmountEl) {
+//             paymentAmountEl.textContent = formatPrice(payment.amount);
+//         }
+        
+//         if (paymentMethodEl) {
+//             paymentMethodEl.textContent = getPaymentMethodName(payment.method);
+//         }
+        
+//         if (paymentInfoBox) {
+//             paymentInfoBox.style.display = 'block';
+//         }
+//     }
+    
+//     // Update progress bar
+//     function updateProgress(current, max) {
+//         const progressFill = document.getElementById('progress-fill');
+//         const progressText = document.getElementById('progress-text');
+        
+//         const percentage = Math.min((current / max) * 100, 100);
+        
+//         if (progressFill) {
+//             progressFill.style.width = percentage + '%';
+//         }
+        
+//         if (progressText) {
+//             const timeRemaining = Math.ceil((max - current) * 2 / 60);
+//             if (timeRemaining > 0) {
+//                 progressText.textContent = `Đang kiểm tra... (${timeRemaining} phút còn lại)`;
+//             } else {
+//                 progressText.textContent = 'Đang hoàn tất...';
+//             }
+//         }
+//     }
+    
+//     // Show error message
+//     function showError(message) {
+//         const container = document.querySelector('.payment-container');
+//         if (container) {
+//             container.innerHTML = `
+//                 <div class="payment-icon" style="color: #EF5350;">
+//                     <i class="fa-solid fa-exclamation-triangle"></i>
+//                 </div>
+//                 <h2 class="payment-title">Có lỗi xảy ra</h2>
+//                 <p class="payment-description">${message}</p>
+//                 <button class="btn btn-primary" onclick="window.location.href='/'">
+//                     <i class="fa-solid fa-home"></i> Về trang chủ
+//                 </button>
+//             `;
+//         }
+//     }
+    
+//     // Format price
+//     function formatPrice(price) {
+//         return price.toLocaleString('vi-VN') + 'đ';
+//     }
+    
+//     // Get payment method name
+//     function getPaymentMethodName(method) {
+//         const methods = {
+//             'cash': 'Tiền mặt',
+//             'momo': 'Ví MoMo',
+//             'zalopay': 'ZaloPay',
+//             'vnpay': 'VNPay',
+//             'bank': 'Chuyển khoản ngân hàng'
+//         };
+//         return methods[method] || method;
+//     }
+    
+//     // Cleanup on page unload
+//     window.addEventListener('beforeunload', () => {
+//         if (pollInterval) {
+//             clearInterval(pollInterval);
+//         }
+//     });
+    
+// })();
+
+// /* ============================================ */
+// /* FILE 5: main-app/public/assets/js/payment-failed.js */
+// /* ============================================ */
+
+// (function() {
+//     'use strict';
+    
+//     // Get URL parameters
+//     const urlParams = new URLSearchParams(window.location.search);
+//     const bookingId = urlParams.get('bookingId');
+//     const error = urlParams.get('error');
+    
+//     console.log('Booking ID:', bookingId);
+//     console.log('Error:', error);
+    
+//     // Show error message based on error type
+//     if (error) {
+//         showErrorMessage(error);
+//     }
+    
+//     // Load booking info if available
+//     if (bookingId) {
+//         loadBookingInfo(bookingId);
+//     }
+    
+//     // Show specific error message
+//     function showErrorMessage(errorType) {
+//         const descriptionEl = document.querySelector('.payment-description');
+//         if (!descriptionEl) return;
+        
+//         const errorMessages = {
+//             'timeout': 'Giao dịch đã hết thời gian chờ. Vui lòng thử lại.',
+//             'connection': 'Không thể kết nối với hệ thống thanh toán. Vui lòng kiểm tra kết nối mạng.',
+//             'invalid_signature': 'Chữ ký giao dịch không hợp lệ. Vui lòng liên hệ hỗ trợ.',
+//             'payment_not_found': 'Không tìm thấy thông tin thanh toán.',
+//             'system_error': 'Lỗi hệ thống. Vui lòng thử lại sau.'
+//         };
+        
+//         const message = errorMessages[errorType] || 'Có lỗi xảy ra trong quá trình thanh toán.';
+//         descriptionEl.innerHTML = message + '<br>Vui lòng thử lại hoặc chọn phương thức thanh toán khác.';
+//     }
+    
+//     // Load booking information
+//     async function loadBookingInfo(bookingId) {
+//         try {
+//             console.log('Loading booking info for:', bookingId);
+            
+//             const response = await fetch(`/booking/${bookingId}`);
+//             const data = await response.json();
+            
+//             if (data.code === 'success' && data.data.booking) {
+//                 const booking = data.data.booking;
+                
+//                 console.log('Booking loaded:', booking);
+                
+//                 // Update UI
+//                 const bookingCodeEl = document.getElementById('booking-code');
+//                 const bookingAmountEl = document.getElementById('booking-amount');
+//                 const bookingInfoBox = document.getElementById('booking-info');
+                
+//                 if (bookingCodeEl) {
+//                     bookingCodeEl.textContent = booking.bookingCode;
+//                 }
+                
+//                 if (bookingAmountEl) {
+//                     bookingAmountEl.textContent = formatPrice(booking.total);
+//                 }
+                
+//                 if (bookingInfoBox) {
+//                     bookingInfoBox.style.display = 'block';
+//                 }
+                
+//             } else {
+//                 console.warn('Booking not found or invalid response');
+//             }
+            
+//         } catch (error) {
+//             console.error('Error loading booking:', error);
+//         }
+//     }
+    
+//     // Retry payment function
+//     window.retryPayment = function() {
+//         if (bookingId) {
+//             // Go back to checkout page with booking ID
+//             window.location.href = `/booking/checkout?bookingId=${bookingId}`;
+//         } else {
+//             // No booking ID, go to home
+//             window.location.href = '/';
+//         }
+//     };
+    
+//     // Format price helper
+//     function formatPrice(price) {
+//         return price.toLocaleString('vi-VN') + 'đ';
+//     }
+    
+// })();
+
+// // Get booking ID from URL
+// const urlParams = new URLSearchParams(window.location.search);
+// const bookingId = urlParams.get('bookingId');
+
+// // Load booking info
+// async function loadBookingInfo() {
+//     const loadingState = document.getElementById('loading-state');
+//     const successContent = document.getElementById('success-content');
+//     const errorState = document.getElementById('error-state');
+    
+//     if (!bookingId) {
+//         loadingState.style.display = 'none';
+//         errorState.style.display = 'block';
+//         return;
+//     }
+    
+//     try {
+//         const response = await fetch(`/api/bookings/${bookingId}`);
+//         const data = await response.json();
+        
+//         if (data.code === 'success' && data.data.booking) {
+//             const booking = data.data.booking;
+            
+//             // Hide loading, show success
+//             loadingState.style.display = 'none';
+//             successContent.style.display = 'block';
+            
+//             // Update UI
+//             updateSuccessPage(booking);
+            
+//             // Clear session storage
+//             sessionStorage.removeItem('bookingData');
+            
+//         } else {
+//             throw new Error('Booking not found');
+//         }
+        
+//     } catch (error) {
+//         console.error('Error loading booking:', error);
+//         loadingState.style.display = 'none';
+//         errorState.style.display = 'block';
+//     }
+// }
+
+// // Update success page with booking data
+// function updateSuccessPage(booking) {
+//     // Booking code
+//     document.getElementById('booking-code-display').textContent = booking.bookingCode;
+    
+//     // Success message
+//     const messageEl = document.getElementById('success-message');
+//     if (booking.paymentStatus === 'paid') {
+//         messageEl.innerHTML = 'Cảm ơn bạn đã đặt vé! Vé của bạn đã được thanh toán thành công.<br>Vui lòng đến rạp trước giờ chiếu ít nhất 15 phút.';
+//     } else {
+//         messageEl.innerHTML = 'Cảm ơn bạn đã đặt vé! Vui lòng thanh toán tại quầy vé trước giờ chiếu.';
+        
+//         // Show cash payment notice
+//         const cashNotice = document.getElementById('cash-payment-notice');
+//         cashNotice.style.display = 'block';
+//         document.getElementById('cash-booking-code').textContent = booking.bookingCode;
+//         document.getElementById('cash-total-amount').textContent = formatPrice(booking.total);
+//     }
+    
+//     // Movie info
+//     if (booking.movieAvatar) {
+//         const avatarEl = document.getElementById('success-movie-avatar');
+//         avatarEl.src = booking.movieAvatar;
+//         avatarEl.style.display = 'block';
+//     }
+    
+//     document.getElementById('success-movie-name').textContent = booking.movieName || '-';
+//     document.getElementById('success-cinema').textContent = booking.cinema || '-';
+    
+//     // Date & Time
+//     if (booking.showtime) {
+//         const dateObj = new Date(booking.showtime.date);
+//         document.getElementById('success-date').textContent = dateObj.toLocaleDateString('vi-VN');
+//         document.getElementById('success-time').textContent = 
+//             `${booking.showtime.time} - ${booking.showtime.format || '2D'}`;
+//     }
+    
+//     // Seats
+//     if (booking.seats && booking.seats.length > 0) {
+//         const seatNumbers = booking.seats.map(s => s.seatNumber).join(', ');
+//         document.getElementById('success-seats').textContent = seatNumbers;
+//     }
+    
+//     // Combos
+//     if (booking.combos && booking.combos.length > 0) {
+//         const comboRow = document.getElementById('combo-row');
+//         comboRow.style.display = 'flex';
+        
+//         const comboTexts = booking.combos.map(c => 
+//             `${c.name} (x${c.quantity})`
+//         ).join(', ');
+//         document.getElementById('success-combos').textContent = comboTexts;
+//     }
+    
+//     // Prices
+//     document.getElementById('success-total').textContent = formatPrice(booking.total);
+    
+//     // Payment info
+//     const paymentMethods = {
+//         'cash': 'Tiền mặt',
+//         'momo': 'Ví MoMo',
+//         'zalopay': 'ZaloPay',
+//         'vnpay': 'VNPay',
+//         'bank': 'Chuyển khoản'
+//     };
+//     document.getElementById('success-payment-method').textContent = 
+//         paymentMethods[booking.paymentMethod] || booking.paymentMethod;
+    
+//     const paymentStatuses = {
+//         'paid': 'Đã thanh toán',
+//         'unpaid': 'Chưa thanh toán'
+//     };
+//     const statusEl = document.getElementById('success-payment-status');
+//     statusEl.textContent = paymentStatuses[booking.paymentStatus] || booking.paymentStatus;
+//     statusEl.style.color = booking.paymentStatus === 'paid' ? 
+//         'var(--color-success)' : 'var(--color-warning)';
+    
+//     // Customer info
+//     document.getElementById('success-customer-name').textContent = booking.fullName || '-';
+//     document.getElementById('success-customer-phone').textContent = booking.phone || '-';
+    
+//     if (booking.email) {
+//         const emailRow = document.getElementById('email-row');
+//         emailRow.style.display = 'flex';
+//         document.getElementById('success-customer-email').textContent = booking.email;
+//     }
+// }
+
+// // Print ticket
+// function printTicket() {
+//     window.print();
+// }
+
+// // Format price
+// function formatPrice(price) {
+//     return price.toLocaleString('vi-VN') + 'đ';
+// }
+
+// // Load booking on page load
+// loadBookingInfo();
