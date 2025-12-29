@@ -18,6 +18,9 @@ app.use('/views', express.static(path.join(__dirname, 'views')));
 const moviesApiRoute = require('./routes/api/movies.route');
 app.use('/api/movies', moviesApiRoute);
 
+const adminBookingRoutes = require('./routes/admin/booking.route');
+app.use('/admin/booking', adminBookingRoutes);
+
 // ===== CLIENT ROUTES =====
 const clientBookingRoutes = require('./routes/client/booking.route');
 const clientPaymentRoutes = require('./routes/client/payment.route');

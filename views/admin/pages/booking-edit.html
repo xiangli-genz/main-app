@@ -132,39 +132,168 @@
   <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
   <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
 
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    // Load header
+    const API_BASE = 'http://localhost:3002/api/admin/bookings';
+    
+    // Get booking ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookingId = urlParams.get('id');
+    
+    if (!bookingId) {
+      alert('Không tìm thấy ID booking trong URL');
+      window.location.href = 'booking-list.html';
+    }
+    
+    document.getElementById('bookingId').value = bookingId;
+
+    // Load header & sider
     fetch('partials/header.html')
       .then(response => response.text())
-      .then(html => document.getElementById('header-placeholder').innerHTML = html)
-      .catch(err => console.error('Lỗi load header:', err));
+      .then(html => document.getElementById('header-placeholder').innerHTML = html);
 
-    // Load sider + gắn event menu mobile (chỉ sau khi load xong)
     fetch('partials/sider.html')
       .then(response => response.text())
       .then(html => {
         document.getElementById('sider-placeholder').innerHTML = html;
-
-        // Gắn sự kiện menu mobile ngay sau khi insert HTML
         const buttonMenu = document.querySelector('.inner-button-menu');
         const sider = document.querySelector('.sider');
         const overlay = document.querySelector('.sider-overlay');
-
         if (buttonMenu && sider && overlay) {
           buttonMenu.addEventListener('click', () => {
             sider.classList.add('active');
             overlay.classList.add('active');
           });
-
           overlay.addEventListener('click', () => {
             sider.classList.remove('active');
             overlay.classList.remove('active');
           });
-        } else {
-          console.warn('Không tìm thấy các element menu mobile');
         }
-      })
-      .catch(err => console.error('Lỗi load sider:', err));
-    </script>
+      });
+
+    // Load booking data
+    async function loadBooking() {
+      try {
+        const response = await axios.get(`${API_BASE}/${bookingId}`);
+        const result = response.data;
+
+        if (result.code === 'success') {
+          const booking = result.data.booking;
+          fillForm(booking);
+        } else {
+          alert('Lỗi: ' + result.message);
+          window.location.href = 'booking-list.html';
+        }
+      } catch (error) {
+        console.error('Lỗi load booking:', error);
+        alert('Không thể tải thông tin booking');
+        window.location.href = 'booking-list.html';
+      }
+    }
+
+    // Fill form with booking data
+    function fillForm(booking) {
+      // Booking code
+      document.getElementById('bookingCode').textContent = booking.bookingCode;
+
+      // Movie info
+      document.getElementById('movieAvatar').src = booking.movieAvatar || 'https://via.placeholder.com/115x115';
+      document.getElementById('movieName').textContent = booking.movieName;
+      document.getElementById('cinema').textContent = booking.cinema;
+      document.getElementById('showtimeDate').textContent = booking.showtimeDateFormat;
+      document.getElementById('showtimeTime').textContent = booking.showtime.time;
+      document.getElementById('showtimeFormat').textContent = booking.showtime.format;
+
+      // Customer info
+      document.getElementById('fullName').value = booking.fullName || '';
+      document.getElementById('phone').value = booking.phone || '';
+      document.getElementById('email').value = booking.email || '';
+      document.getElementById('note').value = booking.note || '';
+
+      // Seats info
+      const seatsHtml = booking.seats.map(seat => 
+        `<div><strong>${seat.seatNumber}</strong> - ${seat.type} - ${seat.price.toLocaleString('vi-VN')}đ</div>`
+      ).join('');
+      document.getElementById('seatsInfo').innerHTML = seatsHtml || 'Không có ghế';
+
+      // Combos info
+      if (booking.combos && booking.combos.length > 0) {
+        const combosHtml = booking.combos.map(combo => 
+          `<div><strong>${combo.name}</strong> x${combo.quantity} - ${combo.totalPrice.toLocaleString('vi-VN')}đ</div>`
+        ).join('');
+        document.getElementById('combosInfo').innerHTML = combosHtml;
+      } else {
+        document.getElementById('combosInfo').innerHTML = 'Không có combo';
+      }
+
+      // Payment info
+      document.getElementById('paymentMethod').value = booking.paymentMethod || 'cash';
+      document.getElementById('paymentStatus').value = booking.paymentStatus;
+      document.getElementById('status').value = booking.status;
+
+      // Prices
+      document.getElementById('subTotal').textContent = booking.subTotal.toLocaleString('vi-VN');
+      document.getElementById('comboTotal').textContent = booking.comboTotal.toLocaleString('vi-VN');
+      document.getElementById('discount').textContent = (booking.discount || 0).toLocaleString('vi-VN');
+      document.getElementById('total').textContent = booking.total.toLocaleString('vi-VN');
+
+      // Created date
+      document.getElementById('createdAt').value = booking.createdAtFormat;
+    }
+
+    // Submit form
+    document.getElementById('booking-edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = {
+        fullName: document.getElementById('fullName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        note: document.getElementById('note').value.trim(),
+        paymentMethod: document.getElementById('paymentMethod').value,
+        paymentStatus: document.getElementById('paymentStatus').value,
+        status: document.getElementById('status').value
+      };
+
+      // Validate
+      if (!formData.fullName) {
+        alert('Vui lòng nhập họ tên!');
+        return;
+      }
+
+      if (!formData.phone) {
+        alert('Vui lòng nhập số điện thoại!');
+        return;
+      }
+
+      const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+      if (!phoneRegex.test(formData.phone)) {
+        alert('Số điện thoại không hợp lệ!');
+        return;
+      }
+
+      try {
+        const response = await axios.patch(`${API_BASE}/${bookingId}`, formData);
+        const result = response.data;
+
+        if (result.code === 'success') {
+          alert('Cập nhật booking thành công!');
+          window.location.reload();
+        } else {
+          alert('Lỗi: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Lỗi cập nhật:', error);
+        if (error.response && error.response.data) {
+          alert('Lỗi: ' + (error.response.data.message || 'Không xác định'));
+        } else {
+          alert('Lỗi kết nối hoặc server');
+        }
+      }
+    });
+
+    // Initial load
+    loadBooking();
+  </script>
 </body>
 </html>

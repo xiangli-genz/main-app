@@ -584,12 +584,12 @@ async function completeBooking() {
     console.log('=== SENDING BOOKING ===', payload);
     
     try {
-        const res = await fetch('/api/bookings/create', {
+        const res = await fetch('/bookings/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(bookingPayload)
         });
         
         const data = await res.json();
